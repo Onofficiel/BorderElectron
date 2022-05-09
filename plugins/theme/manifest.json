@@ -1,0 +1,9 @@
+{
+  "title": "Theme Structure",
+  "description": "this is my theme",
+  "version": "0.0.1",
+  "theme": {
+    "style": "theme.css",
+    "defaultFont": "lexend"
+  }
+}
