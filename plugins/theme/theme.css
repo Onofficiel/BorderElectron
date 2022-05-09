@@ -1,0 +1,23 @@
+titlebar:X {
+  color: red;
+}
+
+titlebar:O {
+  color: green;
+}
+
+titlebar:mm {
+  color:yellow;
+}
+
+tab {
+  opacity:0.5;
+  background-color: default;
+  color:default;
+}
+
+tab:focus {
+  opacity: 1;
+  background-color: default;
+  color:default;
+}
