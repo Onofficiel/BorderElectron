@@ -1,0 +1,14 @@
+{
+  "name": "My Plugin",
+  "description": "a nice plugin",
+  "version": "0.0.1",
+  "start": "plugin.js",
+  "permissions": ["activeTab","tabs","management","scripting","downloads","file://*","contextMenu","commands"], // see /plugins/Permissions.md
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "64": "icon64.png",
+    "128": "icon128.png",
+    "256": "icon256.png"
+  }
+}
