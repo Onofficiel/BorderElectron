@@ -26,7 +26,7 @@ browser.groups.create = function (id,color,tit) {
     labelEl:null,
     close: function () {
       for(var i=0;i<this.tabs.length;i++) {
-        if(document.querySelector(`.tab[data-id~=[${this.tabs[i]}]`)) {
+        if(document.querySelector(`.tab[data-id~="${this.tabs[i]}"]`)) {
           browser.removeTab(this.tabs[i]);
         }
         browser.groups[this.id]=null;
