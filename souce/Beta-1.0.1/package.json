@@ -1,0 +1,20 @@
+{
+  "name": "Border",
+  "version": "1.0.0",
+  "description": "A simple, mordern multi-tab browser.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": "https://github.com/electron/electron-quick-start",
+  "keywords": [
+    "border",
+    "browser",
+    "Electron"
+  ],
+  "author": "GitHub",
+  "license": "CC0-1.0",
+  "devDependencies": {
+    "electron": "^18.2.0"
+  }
+}
