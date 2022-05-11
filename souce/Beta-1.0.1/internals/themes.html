@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Themes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <style>
+      .themes-bar {
+        position: sticky;
+        width:100%;
+        background-color:indigo;
+        color:white;
+        top:0px;left:0px;
+        display:flex;
+        padding-top:4px;
+        padding-bottom:4px;
+        cursor:default;
+      }
+      html,body{margin:0px;}
+      .search-themes {
+        font-size:14px;
+        color:indigo;
+        background-color:white;
+        border-radius:10px;
+        border:none;
+        outline:none;
+        margin-left:10px;
+        margin-right:10px;
+        width:100%;
+        flex-shrink:10000000;
+      }
+      .add-themes-link {
+        opacity:0.5;
+        transition:500ms;
+      }
+      .add-themes-link:hover{
+        opacity:1;
+      }
+      .tile-container {
+        width:100%;
+        display:flex;
+        flex-wrap:wrap;
+      }
+      .tile-container .tile {
+        background-color:#cdcdcd;
+        display:flex;
+        flex-direction:row;
+        border-radius:20px;
+        padding:9px;
+        max-width:230px;
+        max-height:150px;
+        margin:5px;
+      }
+      .tile-container .tile .information {
+        flex-shrink:100000;
+        display:flex;
+        flex-direction:column;
+        padding:5px;
+        width:100%;
+      }
+      .tile-container .tile .thumb {
+        flex-shrink:1;
+        height:130px;
+        padding: 5px;
+        width:200px;
+        background-position:center;
+        background-size:cover;
+      }
+      .tile-container .tile .information button {
+        display: inline-block;
+  		color: var(--bg);
+  		text-decoration: none;
+  		text-align: center;
+  		background-color: var(--text1);
+  		padding: 10px;
+  		margin-top: 10px;
+  		border-radius: 30px;
+  		border: solid 0 var(--text1);
+  		transition: all .2s ease;
+        cursor:pointer;
+      }
+      .tile .title {
+      font-size:23px;font-weight:bold;
+      }
+      .aboutthm{overflow:auto;
+      -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  }
+  .aboutthm::-webkit-scrollbar {display:none}
+    </style>
+  </head>
+  <body style="font-family:Lexend,Arial,sans;">
+    <div class="themes-bar">
+      <span style="font-weight:bold;margin-left:7px;">Themes</span>
+      <input class="search-themes" placeholder="Search your themes..." />
+      <span style="margin-right:7px;cursor:pointer;" class="add-themes-link" onclick="location.href='https://onofficiel.github.io/border/themes';">Get more...</span>
+    </div>
+    <div class="tile-container">
+    <!--<div class="tile">
+    <div class="information">
+    <span class="title">Theme</span>
+    <span style="font-size:12px;">By<i>sdertfyguhijkol;fg</i></span>
+    <span style="width:100%;">my theme</span>
+    </div>
+    <div class="thumb" style="background-image:url(https://onofficiel.github.io/border/theme-assets/img/sharpic.png)" ></div>
+    </div>-->
+    </div>
+    <script>
+      var themes = [];
+      function clean(text){
+      var a=document.createElement('epcf');
+      a.innerText=text;return a.innerHTML
+      }
+      function aptheme(thm){
+      var d=document.createElement('div');
+      d.className='tile';
+      d.innerHTML=`<div class="information">
+    <span class="title">${clean(thm.name)}</span>
+    <span style="font-size:12px;">By<i>${clean(thm.author)}</i></span>
+    <span style="width:100%;" class='aboutthm'>${clean(thm.about)}</span>
+    </div>
+    <div class="thumb" style="background-image:url(${thm.thumb})"></div>`;
+    document.querySelector(".tile-container").appendChild(d);
+      }
+      function loadthemes(){
+      document.querySelector(".tile-container").innerHTML="";
+      for(var i=0;i<themes.length;i++){
+        aptheme(themes[i])
+      }
+      }
+    </script>
+  </body>
+</html>
