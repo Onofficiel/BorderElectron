@@ -673,10 +673,10 @@ let browser = {
                 viewElement.src=evt.args[0]
             }
         })
-        viewElement.webContents.setWindowOpenHandler(function(d){
+        /*viewElement.webContents.setWindowOpenHandler(function(d){
             browser.addTab(d.url);
             return {'action':'deny'}
-        })
+        })*/
 
         document.querySelector("#border-view-container").appendChild(viewElement);
         // <
