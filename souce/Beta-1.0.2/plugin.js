@@ -111,6 +111,11 @@ PluginVm.context=function(allows,eid,manf,fs){
           consoleLogs.push(log);
         });
       },
+      active:async function(){
+        return PluginVm.TabObjectFromId(document.querySelector(".current").dataset.id,allows.indexOf('tabs')>-1,function(log){
+          consoleLogs.push(log);
+        });
+      },
       destroy:async function(id){
         var tab=await globe.border.fetch(id);
         if(!tab) {
