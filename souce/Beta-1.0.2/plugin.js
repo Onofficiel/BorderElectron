@@ -96,6 +96,9 @@ PluginVm.Theme=function(lstheme) {
 PluginVm.context=function(allows,eid,manf,fs){
   var globe={};
   var consoleLogs=[];
+  globe.Audio=function(src){
+    // To-do: play a nice sound!
+  }
   globe.border = {
     tabs: {
       create:async function(prop) {
