@@ -85,7 +85,8 @@ PluginVm.Theme=function(lstheme) {
     about:lstheme.about,
     id:lstheme.id,
     isSystem:lstheme.system,
-    style:lstheme.style||""
+    style:lstheme.style||"",
+    name:lstheme.name
   };
   return thm
 }
