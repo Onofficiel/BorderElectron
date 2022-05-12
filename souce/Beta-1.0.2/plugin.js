@@ -93,7 +93,7 @@ PluginVm.Theme=function(lstheme) {
 
 
 // Create a NodeVM Context
-PluginVm.context=function(allows,eid,manf){
+PluginVm.context=function(allows,eid,manf,fs){
   var globe={};
   var consoleLogs=[];
   globe.border = {
@@ -117,6 +117,61 @@ PluginVm.context=function(allows,eid,manf){
           throw new TypeError("No tab with id '"+id+"'");
         }
         tab.close();
+      }
+    }
+  }
+  globe.border.runtime={
+    id:eid
+  }
+  globe.location = {
+    get href(){
+      return "plugin://"+eid+"/"
+    },
+    set href(hrf){
+      throw new Error("cannot redirect to "+hrf);
+    },
+    get search(){
+      return ""
+    },
+    set search(hrf){
+      throw new Error("cannot redirect to plugin://"+eid);
+    },
+    get hostname(){
+      return  ""
+    },
+    set hostname(hrf){
+      throw new Error("cannot redirect to plugin://"+eid);
+    },
+    get pathname(){
+      return  eid+"/"
+    },
+    set pathname(hrf){
+      throw new Error("cannot redirect to plugin://"+eid+href);
+    },
+  }
+  globe.border.storage = {
+    "set":function(key,value){
+      localStorage.setItem("Plugin"+eid+":"+key,value);
+    },
+    "get":function(key){
+      return localStorage.getItem("Plugin"+eid+":"+key);
+    },
+    rm:function(key){
+      return localStorage.removeItem("Plugin"+eid+":"+key);
+    },
+    keys:function(){
+      var len=localStorage.length;
+      var keys=[];
+      for(var i=0;i<len;i++){
+        if(localStorage.key(i).indexOf("Plugin"+eid+":")==0){
+          keys.push(localStorage.key(i).slice(("Plugin"+eid+":").length))
+        }
+      }
+      return keys
+    },
+    purge:function(){
+      for(var i=0;i<this.keys().length;i++){
+        localStorage.removeItem("Plugin"+eid+":"+this.keys()[i]);
       }
     }
   }
