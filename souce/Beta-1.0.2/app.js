@@ -1,6 +1,59 @@
+const { ipcRenderer } = require('electron');
 var electron=require('electron');
 var {remote}=electron;
 var searchbar=document.querySelector("#border-searchbar");
+
+
+
+
+
+
+
+
+
+
+// fer border plugins
+async function updateBrowserTabCache(){
+  var tabs=document.querySelectorAll('.border-tab');
+  var list={};
+  for(var i=0;i<tabs.length;i++){
+    if(tabs[i]){
+      list[tabs[i].dataset.id]={
+        title:(function(){
+          try{
+            return document.querySelector('.border-view[data-id="'+tabs[i].dataset.id+'"]').getTitle();
+          }catch(errn0){
+            return "Untitled"
+          }
+        })(),
+        url:(function(){
+          try{
+            return document.querySelector('.border-view[data-id="'+tabs[i].dataset.id+'"]').scroll;
+          }catch(errn0){
+            return "about:blank"
+          }
+        })(),
+        id:tabs[i].dataset.id,
+        current:tabs[i].classList.contains('.current')
+      }
+    }
+  }
+  ipcRenderer.send(
+    "win-tab-update",
+    JSON.stringify(list)
+  )
+}
+
+
+
+
+
+
+
+
+
+
+
 var defaultTheme=`
 
 
@@ -573,6 +626,7 @@ let browser = {
         viewElement.nodeIntegration=true;
         viewElement.addEventListener(`page-title-updated`,function(){
 			tabElement.querySelector('.title').innerText=viewElement.getTitle()
+      updateBrowserTabCache()
 		})
 		viewElement.addEventListener(`page-title-updated`,function(){
 			if(viewElement.getTitle().length>25){
@@ -583,11 +637,16 @@ let browser = {
 		})
 		viewElement.addEventListener(`load-commit`,function(){
 			tabElement.dataset.url=browser.getCorrectUrl(viewElement.getURL())
+      updateBrowserTabCache()
 			if(document.querySelector('.tab.current')==tabElement){
 				searchbar.value=browser.getCorrectUrl(viewElement.getURL())
 			}
 		})
+    viewElement.addEventListener('update-target-url',function(){
+      updateBrowserTabCache()
+    })
         viewElement.addEventListener(`did-finish-load`,function(){
+          updateBrowserTabCache()
             if(browser.getCorrectUrl(viewElement.src)=="border://themes") {
                 var installedthemes=[
                   {
@@ -689,6 +748,8 @@ let browser = {
 
         browser.cfg.tabNb++;
         browser.cfg.tabId.push(tabElement.dataset.id);
+        setTimeout(function(){updateBrowserTabCache()},1000);
+        return tabElement.dataset.id;
 
     },
     removeTab: (id) => {
@@ -700,6 +761,7 @@ let browser = {
 
         browser.cfg.tabNb--;
         browser.cfg.tabId.splice(browser.cfg.tabId.indexOf(id), 1);
+        setTimeout(function(){updateBrowserTabCache()},1000)
 
     },
     setCurrent: (id) => {
@@ -721,19 +783,23 @@ let browser = {
 
             document.querySelector("#border-searchbar").value = document.querySelector(".tab.current").dataset.url;
         } catch { }
+        setTimeout(function(){updateBrowserTabCache()},1000)
 
     },
     reloadTab: () => {
 
         document.querySelector("#border-searchbar").value = document.querySelector(".tab.current").dataset.url;
         document.querySelector("#border-view-container").querySelector(".view.current").src=document.querySelector("#border-view-container").querySelector(".view.current").src
+        setTimeout(function(){updateBrowserTabCache()},1000)
     
     },
     back:function(){
 		if(document.querySelector('.view.border-current')){document.querySelector('.view.border-current').goBack()}
+    setTimeout(function(){updateBrowserTabCache()},1000)
 	},
 	forward:function(){
 		if(document.querySelector('.view.border-current')){document.querySelector('.view.border-current').goForward()}
+    setTimeout(function(){updateBrowserTabCache()},1000)
 	},
     generateId: () => {
 
@@ -1041,6 +1107,20 @@ try{
         )
 }catch(e){null}
 }
+
+browser.registerTheme=function(thm){
+  var cthm=[];
+                try{
+                    var x=JSON.parse(localStorage.getItem('my-themes'));
+                    for(var d=0;d<x.length;d++){
+                        cthm.push(x[d])
+                    }
+                }catch(fE){0}
+                var kX=thm
+                kX.iid=cthm.length+1
+                cthm.push(kX)
+                localStorage.setItem('my-themes',JSON.stringify(cthm));
+}
 browser.boot();
 updatetheme()
 window.onkeydown=function(e){
@@ -1059,3 +1139,6 @@ window.onkeydown=function(e){
 electron.ipcRenderer.on("RIGHTCLICK_NTAB",function(){
     browser.addTab({url:'border://newtab',current:true})
 });
+
+
+

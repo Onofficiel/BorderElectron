@@ -41,7 +41,7 @@ PluginVm.TabObjectFromId=function(tabId,allowInfo,raise) {
       }catch(err0r){
         raise({
           type: "Error",
-          message: String(err0r);
+          message: String(err0r)
         });
         throw err0r;
       }

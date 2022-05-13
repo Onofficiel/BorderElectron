@@ -16,5 +16,9 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^18.2.0"
+  },
+  "dependencies": {
+    "audio-loader": "^1.0.3",
+    "audio-play": "^2.3.1"
   }
 }
