@@ -72,25 +72,7 @@ var browser={
   }
 }
 
-browser.private={
-  setCurrent:function(win,tab){
-    if(!PrivateTabCache[win][tab]){return}
-    BrowserWindow.fromWebContents(webContents.fromId(win)).focus()
-    webContents.fromId(win).executeJavaScript("browser.setCurrent("
-    +JSON.stringify(tab)+");",true);
-  },
-  exec: async function (code,win,tab,gest){
-    webContents.fromId(win).executeJavaScript(
-      `if(document.querySelector('.border-view[data-id="${tab}"]')){document.querySelector('.border-view[data-id="${tab}"]').executeScript(${JSON.stringify(code)},gest||false)}`
-    );
-  },
-  redirect:function(win,tab,src){
-    webContents.fromId(win).executeJavaScript(`if(document.querySelector('.border-view[data-id="${tab}"]')){document.querySelector('.border-view[data-id="${tab}"]').src=${JSON.stringify(src)}}`);
-  },
-  removeTab:function(win,tab){
-    webContents.fromId(win).executeJavaScript(`browser.removeTab(${tab})`);
-  }
-}
+
 
 
 
@@ -251,7 +233,7 @@ PluginVm.context=function(allows,eid,manf,fs){
         });
       },
       destroy:async function(id){
-        var tab=await globe.border.fetch(id);
+        var tab=await globe.border.tabs.fetch(id);
         if(!tab) {
           throw new TypeError("No tab with id '"+id+"'");
         }
