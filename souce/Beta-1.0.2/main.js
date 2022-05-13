@@ -10,6 +10,8 @@ var vm=require('node:vm');
 TabCache: Caches tab data
 */
 var TabCache={};
+var PrivateTabCache={};
+
 
 var PluginVm = {};
 ipcMain.on("win-tab-update", function(event,arg){
@@ -22,9 +24,28 @@ ipcMain.on("win-tab-update", function(event,arg){
   }catch(err){null}
 });
 
+ipcMain.on("win-tab-update-private", function(event,arg){
+  // Update TabCache
+  if(!PrivateTabCache[event.sender.id]){
+    PrivateTabCache[event.sender.id]={}
+  }
+  try{
+    PrivateTabCache[event.sender.id]==JSON.parse(arg)
+  }catch(err){null}
+});
+
 PluginVm.getTabData=async function(tab,win){
   if(TabCache[win][tab]){
     return TabCache[win][tab];
+  }
+  else {
+    return {}
+  }
+}
+
+PluginVm.getTabDataPrivate=async function(tab,win){
+  if(PrivateTabCache[win][tab]){
+    return PrivateTabCache[win][tab];
   }
   else {
     return {}
@@ -45,6 +66,29 @@ var browser={
   },
   redirect:function(win,tab,src){
     webContents.fromId(win).executeJavaScript(`if(document.querySelector('.border-view[data-id="${tab}"]')){document.querySelector('.border-view[data-id="${tab}"]').src=${JSON.stringify(src)}}`);
+  },
+  removeTab:function(win,tab){
+    webContents.fromId(win).executeJavaScript(`browser.removeTab(${tab})`);
+  }
+}
+
+browser.private={
+  setCurrent:function(win,tab){
+    if(!PrivateTabCache[win][tab]){return}
+    BrowserWindow.fromWebContents(webContents.fromId(win)).focus()
+    webContents.fromId(win).executeJavaScript("browser.setCurrent("
+    +JSON.stringify(tab)+");",true);
+  },
+  exec: async function (code,win,tab,gest){
+    webContents.fromId(win).executeJavaScript(
+      `if(document.querySelector('.border-view[data-id="${tab}"]')){document.querySelector('.border-view[data-id="${tab}"]').executeScript(${JSON.stringify(code)},gest||false)}`
+    );
+  },
+  redirect:function(win,tab,src){
+    webContents.fromId(win).executeJavaScript(`if(document.querySelector('.border-view[data-id="${tab}"]')){document.querySelector('.border-view[data-id="${tab}"]').src=${JSON.stringify(src)}}`);
+  },
+  removeTab:function(win,tab){
+    webContents.fromId(win).executeJavaScript(`browser.removeTab(${tab})`);
   }
 }
 
@@ -108,7 +152,7 @@ PluginVm.TabObjectFromId=function(tabId,allowInfo,raise) {
         message: `Permission 'tabs' is required to access the tab title`
       });
     },
-    close:function(){try{browser.removeTab()}catch(er0r){null}},
+    close:function(){try{browser.removeTab(wid,tid)}catch(er0r){null}},
     get url(){
       try {
         return TabCache[win][tab].url
@@ -130,29 +174,26 @@ PluginVm.TabObjectFromId=function(tabId,allowInfo,raise) {
 }
 
 browser.addTab=function(data){
-  if(webContents.fromId(lastFocusedId)){
-    webContents.fromId(lastFocusedId).executeJavaScript(
+    browser.lastWindow().fromId(lastFocusedId).executeJavaScript(
       `browser.addTab(${JSON.stringify(data)})`
     )
-  } else {
-    var all=webContents.getAllWebContents()
-    all[all.length-1].fromId(lastFocusedId).executeJavaScript(
-      `browser.addTab(${JSON.stringify(data)})`
-    )
+}
+
+
+browser.lastWindow=function(){
+  if(BrowserWindow.fromId(lastFocusedId)){
+    if(!PrivateTabCache[BrowserWindow.fromId(lastFocusedId).webContents.id]){
+      return BrowserWindow.fromId(lastFocusedId).webContents
+    }
   }
+  var all=BrowserWindow.getAllWindows()
+  return all[all.length-1].webContents;
 }
 
 browser.registerTheme=function(data){
-  if(webContents.fromId(lastFocusedId)){
-    webContents.fromId(lastFocusedId).executeJavaScript(
+  browser.lastWindow().executeJavaScript(
       `browser.registerTheme(${JSON.stringify(data)})`
     )
-  } else {
-    var all=webContents.getAllWebContents()
-    all[all.length-1].fromId(lastFocusedId).executeJavaScript(
-      `browser.registerTheme(${JSON.stringify(data)})`
-    )
-  }
 }
 
 // Theme console
@@ -175,7 +216,17 @@ PluginVm.context=function(allows,eid,manf,fs){
   var globe={};
   var consoleLogs=[];
   globe.Audio=function(src){
-    // To-do: play a nice sound!
+    // ToDo: recreate Html5Audio with 'audio-play' and 'audio-loader'
+  };
+  var GlobeSiI={}
+  var GlobeSiL=1
+  globe.setInterval=function(f,t){
+    GlobeSiI[GlobeSiL]=setInterval(function(){try{f()}catch(e){null}},t)
+    GlobeSiL++
+    return GlobeSiL-1
+  }
+  globe.clearInterval=function(i){
+    if(GlobeSiI(i)){clearInterval(GlobeSiI)}
   }
   globe.border = {
     tabs: {
@@ -426,6 +477,7 @@ app.whenReady().then(() => {
     callback({ path: path.normalize(`${__dirname}/404.html`) })
   });
   createWindow()
+  // testing plugin
   setTimeout(function(){
     PluginVm.run(
       {
@@ -434,9 +486,14 @@ app.whenReady().then(() => {
         permissions:['tabs'],
         worker:''
       },
-      'border.tabs.create('
+      `border.tabs.create(
+        {
+        current:true,focused:true,focus:true,active:true,
+        url:"data:text/html,<h1>plugin</h1>this%20was%20opened%20from%20a%20plugin"
+        }
+      );`
     )
-  })
+  },2000)
   /*tray = new Tray("border.png");
   tray.setToolTip("Border");
   var trayctx=Menu.buildFromTemplate([
