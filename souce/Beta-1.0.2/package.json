@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "audio-loader": "^1.0.3",
-    "audio-play": "^2.3.1"
+    "audio-play": "^2.3.1",
+    "localstorage": "^1.0.1",
+    "node-localstorage": "^2.2.1"
   }
 }

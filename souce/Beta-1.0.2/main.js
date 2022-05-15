@@ -1,7 +1,8 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow,Tray,Menu,Notification,ipcMain,MenuItem,session,webContents} = require('electron')
+const {app,dialog, BrowserWindow,Tray,Menu,Notification,ipcMain,MenuItem,session,webContents} = require('electron')
 const path = require('path')
 var vm=require('node:vm');
+const { electron } = require('electron');
 
 
 /* Plugin VM: For Running Plugins */
@@ -56,19 +57,20 @@ var browser={
   setCurrent:function(win,tab){
     if(!TabCache[win][tab]){return}
     BrowserWindow.fromWebContents(webContents.fromId(win)).focus()
-    webContents.fromId(win).executeJavaScript("browser.setCurrent("
+    webContents.fromId(Number(win)).executeJavaScript("browser.setCurrent("
     +JSON.stringify(tab)+");",true);
   },
   exec: async function (code,win,tab,gest){
-    webContents.fromId(win).executeJavaScript(
+    webContents.fromId(Number(win)).executeJavaScript(
       `if(document.querySelector('.border-view[data-id="${tab}"]')){document.querySelector('.border-view[data-id="${tab}"]').executeScript(${JSON.stringify(code)},gest||false)}`
     );
   },
   redirect:function(win,tab,src){
-    webContents.fromId(win).executeJavaScript(`if(document.querySelector('.border-view[data-id="${tab}"]')){document.querySelector('.border-view[data-id="${tab}"]').src=${JSON.stringify(src)}}`);
+    webContents.fromId(Number(win)).executeJavaScript(`if(document.querySelector('.border-view[data-id="${tab}"]')){document.querySelector('.border-view[data-id="${tab}"]').src=${JSON.stringify(src)}}`);
   },
   removeTab:function(win,tab){
-    webContents.fromId(win).executeJavaScript(`browser.removeTab(${tab})`);
+    console.log(win+"."+tab)
+    webContents.fromId(Number(win)).executeJavaScript(`browser.removeTab(${tab});console.log("f ${tab}")`).catch(console.error)
   }
 }
 
@@ -134,7 +136,7 @@ PluginVm.TabObjectFromId=function(tabId,allowInfo,raise) {
         message: `Permission 'tabs' is required to access the tab title`
       });
     },
-    close:function(){try{browser.removeTab(wid,tid)}catch(er0r){null}},
+    close:function(){browser.removeTab(wid,tid)},
     get url(){
       try {
         return TabCache[win][tab].url
@@ -153,12 +155,13 @@ PluginVm.TabObjectFromId=function(tabId,allowInfo,raise) {
       }
     }
   }
+  return tab
 }
 
-browser.addTab=function(data){
-    browser.lastWindow().fromId(lastFocusedId).executeJavaScript(
+browser.addTab=async function(data){
+    return browser.lastWindow().id+"."+(await browser.lastWindow().executeJavaScript(
       `browser.addTab(${JSON.stringify(data)})`
-    )
+    ))
 }
 
 
@@ -168,8 +171,186 @@ browser.lastWindow=function(){
       return BrowserWindow.fromId(lastFocusedId).webContents
     }
   }
-  var all=BrowserWindow.getAllWindows()
-  return all[all.length-1].webContents;
+  var all=Object.keys(TabCache)
+  if(all.length<0){return null}
+  return webContents.fromId(all[all.length-1]);
+}
+
+var LocalStorage = require('node-localstorage').LocalStorage;
+
+var globalStorage=new LocalStorage("./GlobalStorage");
+
+var ContentSettings = {
+  camera:{},
+  microphone:{},
+  geolocation:{},
+  notify:{},
+  midi:{}
+}
+
+try{
+  ContentSettings.camera=JSON.parse(globalStorage.getItem("BorderCam")||"{}")
+}catch(err){null}
+globalStorage.setItem("BorderCam",JSON.stringify(ContentSettings.camera))
+
+try{
+  ContentSettings.microphone=JSON.parse(globalStorage.getItem("BorderMic")||"{}")
+}catch(err){null}
+globalStorage.setItem("BorderMic",JSON.stringify(ContentSettings.microphone))
+
+try{
+  ContentSettings.geolocation=JSON.parse(globalStorage.getItem("BorderGeo")||"{}")
+}catch(err){null}
+globalStorage.setItem("BorderGeo",JSON.stringify(ContentSettings.geolocation))
+
+try{
+  ContentSettings.notify=JSON.parse(globalStorage.getItem("BorderTray")||"{}")
+}catch(err){null}
+globalStorage.setItem("BorderTray",JSON.stringify(ContentSettings.notify))
+
+try{
+  ContentSettings.midi=JSON.parse(globalStorage.getItem("BorderMid")||"{}")
+}catch(err){null}
+globalStorage.setItem("BorderMid",JSON.stringify(ContentSettings.midi))
+
+
+function showPermissionDialog(title,text){
+  var di=dialog.showMessageBoxSync(null,{
+    title:title,
+    message:text||"",
+    buttons:["Allow","Deny"],
+    cancelId:1,
+    defaultId:0
+  })
+  if(di===1){return -1}else{return 1}
+}
+
+function handlePermissions(url,permission,grant,webContents,mediaTypes) {
+  if(permission=="media") {
+    var cam=ContentSettings.camera[url];
+    var mic=ContentSettings.microphone[url];
+    if((mediaTypes.indexOf("video")>-1)&&(mediaTypes.indexOf("audio")>-1)) {
+      if(cam==1&&mic==1) {
+        grant(true); // allow both
+      } else if(cam==1&&mic==-1){
+        grant(false)
+      } else if(cam==-1&&mic==1){
+        grant(false)
+      } else if(cam&&(!mic)){
+        var micResponse=showPermissionDialog(
+          "Allow Microphone",
+          `${url} wants to access your microphone.`
+        )
+        ContentSettings.microphone[url]=micResponse;
+        globalStorage.setItem('BorderMic',JSON.stringify(ContentSettings.microphone))
+        handlePermissions(url,permission,grant,webContents,mediaTypes);
+      } else if(mic&&(!cam)){
+        var micResponse=showPermissionDialog(
+          "Allow Camera",
+          `${url} wants to access your camera.`
+        )
+        ContentSettings.camera[url]=micResponse;
+        globalStorage.setItem('BorderCam',JSON.stringify(ContentSettings.camera))
+        handlePermissions(url,permission,grant,webContents,mediaTypes);
+      } else if(cam==-1||mic==-1){
+        grant(false)
+      } else {
+        var micResponse=showPermissionDialog(
+          "Allow Media",
+          `${url} wants to access your camera and microphone.`
+        )
+        
+        ContentSettings.microphone[url]=micResponse;
+        ContentSettings.camera[url]=micResponse;
+        globalStorage.setItem('BorderMic',JSON.stringify(ContentSettings.microphone))
+        globalStorage.setItem('BorderCam',JSON.stringify(ContentSettings.camera))
+        handlePermissions(url,permission,grant,webContents,mediaTypes);
+      }
+    } else if((mediaTypes.indexOf("video")>-1)) {
+      if(ContentSettings.camera[url]==1){return grant(true)}
+      if(ContentSettings.camera[url]==-1){return grant(false)}
+      var micResponse=showPermissionDialog(
+        "Allow Camera",
+        `${url} wants to access your camera.`
+      )
+      ContentSettings.camera[url]=micResponse;
+      globalStorage.setItem('BorderCam',JSON.stringify(ContentSettings.camera))
+      handlePermissions(url,permission,grant,webContents,mediaTypes);
+    } else {
+      if(ContentSettings.mic[url]==1){return grant(true)}
+      if(ContentSettings.mic[url]==-1){return grant(false)}
+      var micResponse=showPermissionDialog(
+        "Allow Microphone",
+        `${url} wants to access your microphone.`
+      )
+      ContentSettings.microphone[url]=micResponse;
+      globalStorage.setItem('BorderMic',JSON.stringify(ContentSettings.microphone))
+      handlePermissions(url,permission,grant,webContents,mediaTypes);
+    }
+  } else if(permission=="notifications") {
+    if(ContentSettings.notify[url]==1){
+      grant(true)
+    } else if(ContentSettings.notify[url]==-1){
+      grant(false)
+    } else {
+      var ask=showPermissionDialog(
+        "Allow Notifications",
+        `${url} wants to send you notifications.`
+      );
+      ContentSettings.notify[url]=ask;
+      globalStorage.setItem('BorderTray',JSON.stringify(ContentSettings.notify))
+      handlePermissions(url,permission,grant,webContents,mediaTypes)
+    }
+  } else if(permission=="midi") {
+    if(ContentSettings.midi[url]==1){
+      grant(true)
+    } else if(ContentSettings.midi[url]==-1){
+      grant(false)
+    } else {
+      var ask=showPermissionDialog(
+        "Allow Midi",
+        `${url} wants to access your MIDI devices.`
+      );
+      ContentSettings.midi[url]=ask;
+      globalStorage.setItem('BorderMid',JSON.stringify(ContentSettings.midi))
+      handlePermissions(url,permission,grant,webContents,mediaTypes)
+    }
+  } else if(permission=="geolocation") {
+    if(ContentSettings.geolocation[url]==1){
+      grant(true)
+    } else if(ContentSettings.geolocation[url]==-1){
+      grant(false)
+    } else {
+      var ask=showPermissionDialog(
+        "Allow Location",
+        `${url} wants to see your exact location.`
+      );
+      ContentSettings.geolocation[url]=ask;
+      globalStorage.setItem('BorderGeo',JSON.stringify(ContentSettings.geolocation))
+      handlePermissions(url,permission,grant,webContents,mediaTypes)
+    }
+  } else if(permission=='fullscreen'||permission=='pointerLock '){
+    grant(true)
+  } else {
+    grant(false)
+  }
+}
+
+
+
+
+
+browser.list=function(){
+  var myList=[]
+  var tink;
+  var wink=Object.keys(TabCache)
+  for(var i=0;i<wink.length;i++){
+    tink=Object.keys(TabCache[wink[i]])
+    for(var x=0;x<tink.length;x++){
+      myList.push(wink[i]+"."+tink[x])
+    }
+  }
+  return mylist
 }
 
 browser.registerTheme=function(data){
@@ -202,18 +383,29 @@ PluginVm.context=function(allows,eid,manf,fs){
   };
   var GlobeSiI={}
   var GlobeSiL=1
+  var GlobeStI={}
+  var GlobeStL=1
   globe.setInterval=function(f,t){
     GlobeSiI[GlobeSiL]=setInterval(function(){try{f()}catch(e){null}},t)
     GlobeSiL++
     return GlobeSiL-1
   }
+  globe.setTimeout=function(f,t){
+    GlobeStI[GlobeStL]=setTimeout(function(){try{f()}catch(e){console.error(e)}},t)
+    GlobeStL++
+    return GlobeStL-1
+  }
   globe.clearInterval=function(i){
-    if(GlobeSiI(i)){clearInterval(GlobeSiI)}
+    if(GlobeStI(i)){clearInterval(GlobeStI)}
+  }
+  globe.clearTimeout=function(i){
+    if(GlobeStI(i)){clearTimeout(GlobeStI)}
   }
   globe.border = {
     tabs: {
       create:async function(prop) {
-        var id=browser.addTab({current:prop.active||false,url:prop.url});
+        var id=await browser.addTab({current:prop.active||false,url:prop.url});
+        console.log(id)
         return PluginVm.TabObjectFromId(id,allows.indexOf('tabs')>-1,function(log){
           consoleLogs.push(log);
         });
@@ -238,6 +430,12 @@ PluginVm.context=function(allows,eid,manf,fs){
           throw new TypeError("No tab with id '"+id+"'");
         }
         tab.close();
+      },
+      list: async function(){
+        if(allows.indexOf('tabs')>-1){
+          return browser.list()
+        }
+        return []
       }
     }
   }
@@ -454,6 +652,10 @@ app.whenReady().then(() => {
     const url = request.url.substr(7)
     callback({ path: path.normalize(`${__dirname}/404.html`) })
   });
+  session.fromPartition("persist:BorderProfile-Profile1").setPermissionRequestHandler(function(w,p,c,d){
+    var u=new URL(d.requestingUrl).origin
+    handlePermissions(u,p,c,w,d.mediaTypes);
+  });
   session.fromPartition("persist:BorderPrivateBrowsing-Profile1").protocol.registerFileProtocol('border', (request, callback) => {
     const url = request.url.substr(7)
     callback({ path: path.normalize(`${__dirname}/404.html`) })
@@ -461,21 +663,8 @@ app.whenReady().then(() => {
   createWindow()
   // testing plugin
   setTimeout(function(){
-    PluginVm.run(
-      {
-        'name':"Test",
-        version:2.0,
-        permissions:['tabs'],
-        worker:''
-      },
-      `border.tabs.create(
-        {
-        current:true,focused:true,focus:true,active:true,
-        url:"data:text/html,<h1>plugin</h1>this%20was%20opened%20from%20a%20plugin"
-        }
-      );`
-    )
-  },2000)
+    // todo: Run plugins, caus they WORK!
+  },6000)
   /*tray = new Tray("border.png");
   tray.setToolTip("Border");
   var trayctx=Menu.buildFromTemplate([
