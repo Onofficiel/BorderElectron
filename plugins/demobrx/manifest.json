@@ -1,0 +1,11 @@
+{
+  "name": "My Demo BRX",
+  "version": "0.0.1",
+  "description": "A demo BRX",
+  "author": "Themirrazz",
+  "permissions": ["tabs","storage","bookmarks","https://*/*"],
+  "background": {
+    "worker": "index.js"
+  },
+  "manifest_version": 2
+}
