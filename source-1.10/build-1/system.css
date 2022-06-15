@@ -1,0 +1,203 @@
+.border-bookmark-bar {
+  display: flex;
+  flex-direction: row;
+  background: var(--border-primary);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  width: 100%;
+  min-height:20px;
+  user-select:none;
+}
+
+.border-bookmark-bar::-webkit-scrollbar {
+  display:none;
+}
+#border-titlebar {
+  -webkit-app-region:drag;
+}
+
+.border-bookmark-bar,.border-bookmark,.border-action,.border-default-action,.border-find-dialog,.border-tab,#border-tab-button {
+  -webkit-app-region:no-drag;
+}
+
+#border-titlebar {
+    width: 100%;
+    height: 60px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    flex-direction: row;
+    background: var(--border-secondary);
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+}
+
+.border-bookmark {
+  color: var(--border-secondary);
+  margin-left: 8px;
+  margin-right: 8px;
+  user-select:none;
+  cursor:pointer;
+}
+
+.border-options-menu {
+  position: fixed;
+  right: 7px;
+  top: 105px;
+  color: var(--border-secondary);
+  background-color:var(--border-primary);
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+  padding: 8px;
+  min-width:167px;
+}
+
+.border-options-menu {
+  position: fixed;
+  right: 7px;
+  color: var(--border-secondary);
+  background-color:var(--border-primary);
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+  min-width:167px;
+}
+
+.border-context-menu {
+  position: fixed;
+  z-index: 10000;
+  color: var(--border-secondary);
+  background-color:var(--border-primary);
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+  min-width:167px;
+}
+
+.border-menu-option {
+  padding:9px;
+  cursor:pointer;
+}
+
+.border-check-mark {
+  float: right;
+  height: 10px;
+  width: 5px;
+  border-width: 0 3px 3px 0;
+  border-style: solid;
+  border-color: var(--border-secondary);
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+.border-options-menu,.border-menu-option,.border-view {
+  user-select:none;
+}
+
+@keyframes border-menu-fadein {
+  0% {opacity:0}
+  100% {opacity:1}
+}
+
+#border-ctrl-btn-container {
+width: 100px;
+height: 100%;
+display: -webkit-box;
+display: -ms-flexbox;
+display: flex;
+-webkit-box-align: center;
+-ms-flex-align: center;
+align-items: center;
+justify-content: space-evenly;
+}
+
+.border-bookmark-popup {
+  position: fixed;
+  color: var(--border-secondary);
+  background-color: var(--border-primary);
+  height: 300px;
+  width: 300px;
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+  top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction:column;
+}
+
+
+.border-action {
+  font-size:14px;
+  color: var(--border-primary);
+  background-color: var(--border-secondary);
+  border: none;
+  outline: none;
+}
+
+.border-default-action {
+  font-size:14px;
+  background-color: var(--border-primary);
+  color: var(--border-secondary);
+  border: none;
+  outline: none;
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+}
+
+.border-nbkm-title,.border-nbkm-href {
+  font-size: 15px;
+  color: var(--border-primary);
+  background-color: var(--border-secondary);
+  border:none;
+}
+
+.border-text-finders {
+  position: fixed;
+  top: 90px;
+  right: 5px;
+}
+
+.border-popup-buttons {
+  left: 0px;
+  bottom: 3px;
+  width:100%;
+  text-align:center; 
+}
+
+.border-find-button {
+  fill: var(--border-secondary);
+}
+
+.border-find-dialog {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--border-primary);
+  padding: 5px;
+  border:1px solid;
+  border-color:var(--border-secondary);
+}
+
+.border-find-dialog svg,.border-find-dialog .border-find-input,.border-found-count {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+.border-find-input {
+  outline: none;
+  border: none;
+  color: var(--border-secondary);
+  background: var(--border-primary);
+  font-size: 16px;
+}
+
+.border-view.border-current {
+  display: flex !important;
+}
