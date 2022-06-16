@@ -1401,6 +1401,14 @@ Because of the iframe system some website won't work in this browser (like youtu
               "--border-secondary",
               this.#Files.config.theme.secondary
           );
+    setInterval(()=>{
+      document
+          .querySelector(":root")
+          .style.setProperty("--border-primary", this.getValidHex(localStorage.getItem("theme-primary"))||"#4e2493");
+      document
+          .querySelector(":root")
+          .style.setProperty("--border-secondary", this.getValidHex(localStorage.getItem("theme-secondary"))||"#ffe5fb");
+    },100);
 
       let h = this.#browserBody.querySelectorAll(".border-history-btn");
 
