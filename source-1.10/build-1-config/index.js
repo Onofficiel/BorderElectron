@@ -66,11 +66,11 @@ function maxwin() {
 
         const goto = (n) => {
           if (n >= page.length) {
-            finishInstallation()
+            await finishInstallation()
+              return window.close()
           }
 
           if (n < 0) {
-            this.window.create();
             return window.close();
           }
 
@@ -95,4 +95,3 @@ async function finishInstallation() {}
 
 document.querySelector('.border-close').onclick=()=>{chrome.app.window.current().close();}
 document.querySelector('.border-minimize').onclick=()=>{chrome.app.window.current().minimize();}
-document.querySelector('.border-maximize').onclick=()=>{maxwin()}
