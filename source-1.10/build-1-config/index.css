@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend&display=swap');
+
+html,body{margin:0}
+:root {
+  --text1:#ffe5fb;
+  --bg:#4e2493;
+}
+
+.border-setup-back, .border-setup-next {
+  display: inline-block;
+  color: var(--bg);
+  text-decoration: none;
+  text-align: center;
+  background-color: var(--text1);
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 30px;
+  border: solid 0 var(--text1);
+  transition: all .2s ease;
+  outline: none;
+  font-size: 17px;
+  width: 140px;
+  font-family: 'Lexend', Arial, sans-serif, sans;
+}
+.border-setup-body {
+    background: #4e2493;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    color: #fff;
+    font-family: Lexend, sans-serif;
+    font-size: .7rem;
+}
+.border-setup-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    color: #fff;
+    font-size: .7rem;
+}
+
+
+
+.border-setup-back:hover {
+  padding: 5px;
+  background-color: #fff0;
+  border: solid 5px var(--text1);
+  color:white;
+}
+
+.border-setup-next:hover {
+  padding: 5px;
+  background-color: #fff0;
+  border: solid 5px var(--text1);
+  color:white;
+}
+
+.border-titlebar {
+    width: 100%;
+    height: 30px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    flex-direction: row;
+    background: #4e2493;
+    -webkit-box-align: flex-end;
+    -ms-flex-align: flex-end;
+    align-items: flex-end;
+  justify-content:flex-end;
+  -webkit-app-region:drag;
+}
+.border-maximize {
+    opacity:0.5;
+    -webkit-opacity:0.5;
+    -ms-filter: Alpha(Opacity=50%);
+}
+
+.border-setup-body,.border-close,.border-minimize{-webkit-app-region:no-drag}
+#border-ctrl-btn-container {
+width: 100px;
+height: 100%;
+display: -webkit-box;
+display: -ms-flexbox;
+display: flex;
+-webkit-box-align: flex;
+-ms-flex-align: center;
+align-items: center;
+justify-content: space-evenly;
+}
+
+.border-ctrl-btn path {
+  fill: #ffe5fb
+}
