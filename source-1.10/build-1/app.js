@@ -115,6 +115,12 @@ startFAR() {
     })
   }
 }
+back(){
+  document.querySelector(".border-view.border-current").goBack()
+}
+forward(){
+  document.querySelector(".border-view.border-current").goForward()
+}
 /** The items to show when the three-dot menu is clicked. */
 dotmenu=[
   {
