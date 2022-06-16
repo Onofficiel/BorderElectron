@@ -1,0 +1,25 @@
+{
+    "name": "border-electron",
+    "version": "1.0.0",
+    "description": "The most powerful Windows96 Web Browser, now for Windows, Mac, and Linux!",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron ."
+    },
+    "repository": "https://github.com/themirrazz/BorderElectron",
+    "keywords": [
+        "border",
+        "browser",
+        "electron"
+    ],
+    "author": "Themirrazz",
+    "license": "CC0-1.0",
+    "devDependencies": {
+        "electron": "^19.0.4"
+    },
+    "dependencies": {
+        "audio-loader": "^1.0.3",
+        "audio-play": "^2.3.1",
+        "node-localstorage": "^2.2.1"
+    }
+}

@@ -128,9 +128,7 @@ dotmenu=[
   {
     name: "New Window",
     action: () => {
-      open(
-        "https://"+location.hostname+location.pathname
-      )
+      ipcRenderer.send("new-window")
     }
   },
   {
@@ -717,6 +715,11 @@ font-size: 16px;
         } catch(er0r){null}
   },10)
 }
+loadBookMarks() {
+  try {
+    this.bookmarks=JSON.parse(localStorage.getItem('borderbkm'))||[]
+  } catch (f) {0}
+}
 /** Loads the bookmarks into the bookmark bar */
 populateBookMarks() {
   var bar=document.querySelector('.border-bookmark-bar');
@@ -1050,8 +1053,8 @@ Because of the iframe system some website won't work in this browser (like youtu
         } catch (error) {
           title=viewElement.src
         }
-        if(title.length>80) {
-          title=title.slice(0,76)+"..."
+        if(title.length>20) {
+          title=title.slice(0,18)+"..."
         }
         tabElement.querySelector('.border-title').innerText=title
       },10)
@@ -1073,6 +1076,15 @@ Because of the iframe system some website won't work in this browser (like youtu
         tabElement.querySelector('.border-title').innerText=this.#handleURI(tab.url)[0].split("/")[2]
       }
     }
+    var UU$=tab.url||"border://newtab"
+    setInterval(function(){
+      if(UU$==viewElement.getURL()) { return }
+      UU$=viewElement.getURL()
+      tabElement.dataset.url=viewElement.getURL()
+      if(tabElement.classList.contains('border-current')) {
+        document.querySelector("#border-searchbar").value=viewElement.getURL()
+      }
+    },20)
     var cmenu=this.populateMenu
     var bws=this
     tabElement.addEventListener('contextmenu',function(e){
@@ -1205,7 +1217,7 @@ Because of the iframe system some website won't work in this browser (like youtu
  * @deprecated Only works in Border for w96.
  */
   openWindow() {
-      return;
+      ipcRenderer.send("new-window")
   }
  /** Returns a generated tab id. */
   generateId() {
@@ -1536,8 +1548,9 @@ Because of the iframe system some website won't work in this browser (like youtu
     }
     this.populateBookMarks()
     setInterval(()=>{
+      this.loadBookMarks()
       this.populateBookMarks()
-    },30)
+    },300)
 
       this.#browserBody
           .querySelector("#border-searchbar")
@@ -1607,7 +1620,6 @@ Because of the iframe system some website won't work in this browser (like youtu
         }
         document.title=title+" - Border"
       },10)
-
       
   }
 }

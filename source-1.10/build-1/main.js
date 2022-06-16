@@ -4,12 +4,9 @@ const path = require('path')
 var vm=require('node:vm');
 const { electron } = require('electron');
 
-const fs=require('fs')
+const fs=require('fs');
+const { create } = require('domain');
 
-
-var LocalStorage = require('node-localstorage').LocalStorage;
-
-var globalStorage=new LocalStorage("./GlobalStorage");
 
 
 
@@ -91,8 +88,12 @@ var BorderPublicScheme = {
   'fonts/lexend-ext.woff2': 'fonts/lexend-ext.woff2',
   'fonts/lexend-vnm.woff2': 'fonts/lexend-vnm.woff2',
   'styles/lexend.css':'styles/lexend.css',
-  'assets/woozy.png': 'images/woozy.png'
+  'assets/woozy.png': 'images/woozy.png',
+  'urls': 'urls.html',
+  'about': 'about.html',
 }
+
+ipcMain.on("new-window",()=>createWindow())
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.

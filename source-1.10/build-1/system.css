@@ -114,6 +114,9 @@ align-items: center;
 justify-content: space-evenly;
 }
 
+
+.bordder-view{background:white}
+
 .border-bookmark-popup {
   position: fixed;
   color: var(--border-secondary);
