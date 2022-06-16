@@ -64,10 +64,10 @@ function maxwin() {
             goto(++currentPage);
           });
 
-        const goto = (n) => {
+        const goto = async (n) => {
           if (n >= page.length) {
             await finishInstallation()
-              return window.close()
+             return window.close()
           }
 
           if (n < 0) {
