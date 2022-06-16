@@ -84,7 +84,7 @@ startFAR() {
   var onfind=function(e){
     console.log(e)
     ui.found=e.result.matches
-    ui.result=e.result.activeMatchOrdinal
+    ui.result=wasback?e.result.activeMatchOrdinal-1:e.result.activeMatchOrdinal+1
   }
   webview.addEventListener('found-in-page',onfind)
   ui.onexit=function() {
@@ -92,6 +92,7 @@ startFAR() {
     webview.removeEventListener('found-in-page',onfind)
   }
   var val=""
+  var wasback=false
   ui.ontext=function(text) {
     val=text
     webview.findInPage(text,{
@@ -99,22 +100,24 @@ startFAR() {
     })
     if(text.length==0) {
       ui.found=0
-      ui.length=0
     }
   }
   ui.onnext=function () {
+    wasback=false
     webview.findInPage(val,{
       findNext:false,
       forward:true
     })
   }
   ui.onprev=function () {
+    wasback=true
     webview.findInPage(val,{
       findNext:false,
       forward:false
     })
   }
 }
+back() {
   document.querySelector(".border-view.border-current").goBack()
 }
 forward(){
@@ -1070,17 +1073,9 @@ Because of the iframe system some website won't work in this browser (like youtu
       // <
 
       // After Created Action
-      if (tab.current) {this.setCurrent(tabElement.dataset.id);
-      this.reloadTab();}
+      if (tab.current) {this.setCurrent(tabElement.dataset.id);}
       // <
-    if(!tab.current) {
       viewElement.src=this.#handleURI(tab.url)[0]
-      if(this.#handleURI(tab.url)[1]) {
-        tabElement.querySelector('.border-title').innerText=this.#handleURI(tab.url)[1]
-      } else {
-        tabElement.querySelector('.border-title').innerText=this.#handleURI(tab.url)[0].split("/")[2]
-      }
-    }
     var UU$=tab.url||"border://newtab"
     setInterval(function(){
       if(UU$==viewElement.getURL()) { return }
@@ -1107,6 +1102,7 @@ Because of the iframe system some website won't work in this browser (like youtu
 
       this.#tabNb++;
       this.#tabId.push(tabElement.dataset.id);
+      return tabElement.dataset.id
   }
 /**
 * Switches focus to the specified tab.
@@ -1420,7 +1416,7 @@ Because of the iframe system some website won't work in this browser (like youtu
       });
       h[2].addEventListener(
           "click",
-          this.reloadTab()
+          ()=>this.reloadTab()
       );
 
       this.#browserBody
@@ -1431,7 +1427,6 @@ Because of the iframe system some website won't work in this browser (like youtu
           .addEventListener("click", () => {
               this.#browserBody.querySelector(".border-tab.border-current").dataset.url =
                   this.#browserBody.querySelector("#border-searchbar").value;
-              this.reloadTab();
           });
 
       this.addTab({ current: true });
@@ -1524,7 +1519,6 @@ Because of the iframe system some website won't work in this browser (like youtu
               if (event.key === "Enter") {
                   this.#browserBody.querySelector(".border-tab.border-current").dataset.url =
                       this.#browserBody.querySelector("#border-searchbar").value;
-                  this.reloadTab();
               }
           });
     document.querySelector(".border-bookmark-bar").addEventListener('contextmenu',function(e){
