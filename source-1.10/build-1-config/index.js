@@ -1,6 +1,7 @@
 
 function maxwin() {
-  ipcRenderer.send("winmaximize")
+  var win=chrome.app.window.current()
+  win.isMaximized()?win.restore():win.maximize()
 }
 
 
@@ -70,7 +71,7 @@ function maxwin() {
 
           if (n < 0) {
             this.window.create();
-            return wnd.close();
+            return window.close();
           }
 
           document.querySelector(".border-setup-panel").innerHTML =
@@ -92,6 +93,6 @@ function maxwin() {
 
 async function finishInstallation() {}
 
-document.querySelector('.border-close').onclick=()=>{window.close();}
-document.querySelector('.border-minimize').onclick=()=>{ipcRenderer.send("winminimize")}
+document.querySelector('.border-close').onclick=()=>{chrome.app.window.current().close();}
+document.querySelector('.border-minimize').onclick=()=>{chrome.app.window.current().minimize();}
 document.querySelector('.border-maximize').onclick=()=>{maxwin()}
