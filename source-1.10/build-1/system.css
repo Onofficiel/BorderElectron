@@ -16,7 +16,7 @@
   -webkit-app-region:drag;
 }
 
-.border-bookmark-bar,.border-bookmark,.border-action,.border-default-action,.border-find-dialog,.border-tab,#border-tab-button {
+.border-bookmark-bar,.border-bookmark,.border-action,.border-default-action,.border-find-dialog,.border-tab,#border-add-button,.border-ctrl-btn {
   -webkit-app-region:no-drag;
 }
 
