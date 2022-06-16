@@ -115,7 +115,6 @@ startFAR() {
     })
   }
 }
-back(){
   document.querySelector(".border-view.border-current").goBack()
 }
 forward(){
@@ -1161,50 +1160,7 @@ Because of the iframe system some website won't work in this browser (like youtu
   }
  /** Reloads the current tab. */
   reloadTab() {
-      if (
-          !this.#handleURI(
-              this.#browserBody.querySelector(".border-tab.border-current").dataset.url
-          )[1]
-      ) {
-          this.#browserBody.querySelector("#border-searchbar").value =
-              this.#handleURI(
-                  this.#browserBody.querySelector(".border-tab.border-current").dataset.url
-              )[0];
-      } else {
-          this.#browserBody.querySelector("#border-searchbar").value = this.#browserBody.querySelector(
-              ".border-tab.border-current"
-          ).dataset.url;
-      }
-
-      this.#browserBody
-          .querySelector("#border-view-container")
-          .querySelector(".border-view.border-current").src =
-          this.#handleURI(
-              this.#browserBody
-                  .querySelector("#border-tab-container")
-                  .querySelector(".border-tab.border-current").dataset.url
-          )[0];
-
-      this.#browserBody.querySelector("#border-searchbar").blur();
-
-      if (
-          this.#handleURI(
-              this.#browserBody.querySelector(".border-tab.border-current").dataset.url
-          )[1]
-      ) {
-          this.#browserBody
-              .querySelector(".border-tab.border-current")
-              .querySelector(".border-title").innerText =
-              this.#handleURI(
-                  this.#browserBody.querySelector(".border-tab.border-current").dataset.url
-              )[1];
-      } else
-          this.#browserBody
-              .querySelector(".border-tab.border-current")
-              .querySelector(".border-title").innerText = this.#handleURI(
-                  this.#browserBody.querySelector(".border-tab.border-current").dataset.url
-              )[0]
-                  .split("/")[2];
+    document.querySelector('.border-view.border-current').reload()
   }
  /** Closes the current Border window. */
   closeWindow() {
@@ -1449,18 +1405,14 @@ Because of the iframe system some website won't work in this browser (like youtu
       let h = this.#browserBody.querySelectorAll(".border-history-btn");
 
       h[0].addEventListener("click", () => {
-          window.history.back();
-          this.reloadTab();
+          this.back()
       });
       h[1].addEventListener("click", () => {
-          window.history.forward();
-          this.reloadTab();
+          this.forward();
       });
       h[2].addEventListener(
           "click",
-          () =>
-          (this.#browserBody.querySelector(".border-view.border-current").src =
-              this.#browserBody.querySelector(".border-view.border-current").src)
+          this.reloadTab()
       );
 
       this.#browserBody
