@@ -4,6 +4,25 @@ var {remote}=electron;
 
 
 class Border {
+  isValidHexColor(entry) {
+    if(!entry) { return false }
+    entry=entry.toLowerCase()
+    var allowed="abcdef012345"
+    if(entry[0]!="#") { return false }
+    if((entry.length!=7)&&(entry.length!=8)&(entry.length!=4)&&(entry.length!=5)) { return false }
+    entry=entry.slice(1)
+    for(var i=0;i<entry.length;i++) {
+      if(!allowed.includes(entry[i])) { return false }
+    }
+    return true
+  }
+  getValidHex(color) {
+    if(!color) {return null}
+    if(! this.isValidHexColor(color)) {
+      return null
+    }
+    return color
+  }
 
   #Files = {}
  /** Creates a new browser instance. */
@@ -12,8 +31,8 @@ class Border {
           this.#Files.config = {
               theme: {
                   currentTheme: "default",
-                  primary: "#4e2493",
-                  secondary: "#ffe5fb",
+                  primary: this.getValidHex(localStorage.getItem("theme-primary"))||"#4e2493",
+                  secondary: this.getValidHex(localStorage.getItem("theme-secondary"))||"#ffe5fb",
               },
               window: {
                   customTitlebar: true,
@@ -53,6 +72,7 @@ class Border {
 /** starts the FAR(Text Search) service in the current tab. */
 startFAR() {
   var acttb=document.querySelector('.border-tab.border-current');
+  var webview=document.querySelector('.border-view.border-current');
   if(!acttb) {return}
   var id=acttb.dataset.id
   if(document.querySelector('.border-find-dialog[id="'+id+'"]')) {
@@ -61,8 +81,38 @@ startFAR() {
   var ui=this.createFindDialog(
     id
   );
+  var onfind=function(e){
+    console.log(e)
+    ui.found=e.result.matches
+    ui.result=e.result.activeMatchOrdinal
+  }
+  webview.addEventListener('found-in-page',onfind)
+  ui.onexit=function() {
+    webview.stopFindInPage("keepSelection")
+    webview.removeEventListener('found-in-page',onfind)
+  }
+  var val=""
   ui.ontext=function(text) {
-    this.found=text.length
+    val=text
+    webview.findInPage(text,{
+      findNext:true
+    })
+    if(text.length==0) {
+      ui.found=0
+      ui.length=0
+    }
+  }
+  ui.onnext=function () {
+    webview.findInPage(val,{
+      findNext:false,
+      forward:true
+    })
+  }
+  ui.onprev=function () {
+    webview.findInPage(val,{
+      findNext:false,
+      forward:false
+    })
   }
 }
 /** The items to show when the three-dot menu is clicked. */
@@ -929,20 +979,9 @@ Because of the iframe system some website won't work in this browser (like youtu
 * @param url{string} - The URL to correct
   */
   #handleURI(url) {
-      if (!window.navigator.onLine && !RegExp("^border:/*").test(url)) return ["data:text/html," + encodeURI(this.protocols.offline), "Not Connected"];
       if (url.startsWith("//")) return ["https://" + url.substring(2), false];
 
       if (/^\S*:/i.test(url)) {
-          for (let i = 0; i < Object.keys(this.protocols).length; i++) {
-              const protocol = Object.keys(this.protocols)[i];
-
-              if (RegExp("^border:/*" + protocol + "$").test(url)) {
-                  return [
-                      encodeURI("data:text/html," + this.protocols[protocol]),
-                      protocol,
-                  ];
-              }
-          }
           return [url, false];
       } else {
           if (/^([-a-zA-Z0-9^\p{L}\p{C}\u00a1-\uffff@:%_\+.~#?&//=]{2,256}){1}(\.[a-z]{2,4}){1}(\:[0-9]*)?(\/[-a-zA-Z0-9\u00a1-\uffff\(\)@:%,_\+.~#?&//=]*)?([-a-zA-Z0-9\(\)@:%,_\+.~#?&//=]*)?$/i.test(url)) {
@@ -1003,6 +1042,7 @@ Because of the iframe system some website won't work in this browser (like youtu
 
       // Create an html view tab
       let viewElement = document.createElement("webview");
+      viewElement.partition="persist:BorderProfile-Profile1"
       setInterval(function() {
         var title=""
         try {
@@ -1495,6 +1535,9 @@ Because of the iframe system some website won't work in this browser (like youtu
       tdm.style.display=(tdm.style.display=='none' ? "":"none")
     }
     this.populateBookMarks()
+    setInterval(()=>{
+      this.populateBookMarks()
+    },30)
 
       this.#browserBody
           .querySelector("#border-searchbar")
@@ -1518,7 +1561,13 @@ Because of the iframe system some website won't work in this browser (like youtu
               var u=document.querySelector(
                 '.border-tab.border-current'
               ).dataset.url
-              document.querySelector('.border-nbkm-title').value=u;
+              document.querySelector('.border-nbkm-title').value=(()=>{
+                try {
+                  return document.querySelector('.border-current.border-view').getTitle()||i
+                } catch (e) {
+                  return u
+                }
+              })();
               document.querySelector('.border-nbkm-href').value=u;
               document.querySelector('.border-bookmark-popup').style.display=""
             }
@@ -1559,41 +1608,7 @@ Because of the iframe system some website won't work in this browser (like youtu
         document.title=title+" - Border"
       },10)
 
-      if (this.#Files.config.browser.enableShortcuts) {
-          for (const keybind in this.keybinds) {
-              if (Object.hasOwnProperty.call(this.keybinds, keybind)) {
-                  const cKeybind = this.keybinds[keybind];
-
-                  cKeybind.keys.reverse();
-
-                  let status = [];
-
-                  for (const key in cKeybind.keys) {
-                      if (Object.hasOwnProperty.call(cKeybind.keys, key)) {
-                          const cKey = cKeybind.keys[key];
-
-                          status.push(false);
-
-                          window.addEventListener("keydown", (e) => {
-                              if (e.key.toLowerCase() === cKey.toLowerCase()) {
-                                  status[key] = true;
-                              } else status[key] = false;
-
-                              let i = 0;
-                              for (let stat in status) {
-                                  if (status[stat]) i++;
-
-                                  if (i >= status.length) {
-                                      e.preventDefault();
-                                      cKeybind.exec();
-                                  }
-                              }
-                          });
-                      }
-                  }
-              }
-          }
-      }
+      
   }
 }
 let browser = new Border();
