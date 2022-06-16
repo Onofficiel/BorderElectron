@@ -22,6 +22,23 @@ html,body{margin:0}
   width: 140px;
   font-family: 'Lexend', Arial, sans-serif, sans;
 }
+
+.button-setup-next {
+    margin-left: 50px;
+}
+
+.button-setup-back {
+    margin-right: 50px;
+}
+
+.border-setup-button-container {
+    display:flex;
+    width:100%;
+    flex-direction:row;
+    align-items: space-evenly;
+    justify-content: space-evenly;
+}
+
 .border-setup-body {
     background: #4e2493;
     display: flex;
