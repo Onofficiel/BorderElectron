@@ -114,14 +114,27 @@ align-items: center;
 justify-content: space-evenly;
 }
 
-
-.bordder-view{background:white}
-
 .border-bookmark-popup {
   position: fixed;
   color: var(--border-secondary);
   background-color: var(--border-primary);
   height: 300px;
+  width: 300px;
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+  top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction:column;
+}
+
+.border-alert-dialog {
+  position: fixed;
+  color: var(--border-secondary);
+  background-color: var(--border-primary);
+  height: fit-content;
   width: 300px;
   border-width: 2px;
   border-color:var(--border-secondary);
@@ -142,7 +155,26 @@ justify-content: space-evenly;
   outline: none;
 }
 
+.border-alert-action {
+  font-size:14px;
+  color: var(--border-primary);
+  background-color: var(--border-secondary);
+  border: none;
+  outline: none;
+}
+
 .border-default-action {
+  font-size:14px;
+  background-color: var(--border-primary);
+  color: var(--border-secondary);
+  border: none;
+  outline: none;
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+}
+
+.border-ok-action {
   font-size:14px;
   background-color: var(--border-primary);
   color: var(--border-secondary);
@@ -171,6 +203,13 @@ justify-content: space-evenly;
   bottom: 3px;
   width:100%;
   text-align:center; 
+}
+
+.border-alert-buttons {
+  left: 0px;
+  bottom: 3px;
+  width:100%;
+  text-align:right; 
 }
 
 .border-find-button {
@@ -203,4 +242,8 @@ justify-content: space-evenly;
 
 .border-view.border-current {
   display: flex !important;
+}
+
+.border-view {
+  background-color:white !important;
 }

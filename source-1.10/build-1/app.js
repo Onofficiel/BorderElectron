@@ -7,7 +7,7 @@ class Border {
   isValidHexColor(entry) {
     if(!entry) { return false }
     entry=entry.toLowerCase()
-    var allowed="abcdef012345"
+    var allowed="abcdef0123456789"
     if(entry[0]!="#") { return false }
     if((entry.length!=7)&&(entry.length!=8)&(entry.length!=4)&&(entry.length!=5)) { return false }
     entry=entry.slice(1)
@@ -595,22 +595,39 @@ justify-content: space-evenly;
 }
 
 .border-bookmark-popup {
-position: fixed;
-color: var(--border-secondary);
-background-color: var(--border-primary);
-height: 300px;
-width: 300px;
-filter: drop-shadow(10px 10px 4px #00000072);
-border-width: 2px;
-border-color:var(--border-secondary);
-border-style: solid;
-border-radius: 11px;
-top: 5px;
-display: flex;
-align-items: center;
-justify-content: center;
-flex-direction:column;
-}
+  position: fixed;
+  color: var(--border-secondary);
+  background-color: var(--border-primary);
+  height: 300px;
+  width: 300px;
+  filter: drop-shadow(10px 10px 4px #00000072);
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+  border-radius: 11px;
+  top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction:column;
+  }
+
+  .border-alert-dialog {
+    position: fixed;
+    color: var(--border-secondary);
+    background-color: var(--border-primary);
+    width: 300px;
+    filter: drop-shadow(10px 10px 4px #00000072);
+    border-width: 2px;
+    border-color:var(--border-secondary);
+    border-style: solid;
+    border-radius: 11px;
+    top: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction:column;
+    }
 
 .border-popup-title {
 margin: 0px;
@@ -626,14 +643,28 @@ font-size: 24px;
 }
 
 .border-action {
-padding: 10px;
-font-size:14px;
-color: var(--border-primary);
-background-color: var(--border-secondary);
-border: none;
-outline: none;
-border-radius:30px;
-}
+  padding: 10px;
+  font-size:14px;
+  color: var(--border-primary);
+  background-color: var(--border-secondary);
+  border: none;
+  outline: none;
+  border-radius:30px;
+  }
+
+  .border-alert-action {
+    padding: 8px;
+    font-size:13px;
+    color: var(--border-primary);
+    background-color: var(--border-secondary);
+    border: none;
+    outline: none;
+    border-radius:20px;
+    text-align:center;
+    padding-left:17px;
+  padding-right:17px;
+  display:inline-block;
+    }
 
 .border-default-action {
 padding: 10px;
@@ -647,6 +678,23 @@ border-width: 2px;
 border-color:var(--border-secondary);
 border-style: solid;
 }
+
+.border-ok-action {
+  padding:8px;
+  font-size:13px;
+  background-color: var(--border-primary);
+  color: var(--border-secondary);
+  border: none;
+  outline: none;
+  border-radius:20px;
+  border-width: 2px;
+  border-color:var(--border-secondary);
+  border-style: solid;
+  padding-left:17px;
+  padding-right:17px;
+  display:inline-block;
+  text-align:center;
+  }
 
 .border-nbkm-title,.border-nbkm-href {
 border-radius: 25px;
@@ -664,11 +712,18 @@ right: 5px;
 }
 
 .border-popup-buttons {
-left: 0px;
-bottom: 3px;
-width:100%;
-text-align:center; 
-}
+  left: 0px;
+  bottom: 3px;
+  width:100%;
+  text-align:center; 
+  }
+
+  .border-alert-buttons {
+    left: 0px;
+    bottom: 3px;
+    width:100%;
+    text-align:right; 
+    }
 
 .border-find-button {
 fill: var(--border-secondary);
@@ -1075,14 +1130,31 @@ Because of the iframe system some website won't work in this browser (like youtu
       // After Created Action
       if (tab.current) {this.setCurrent(tabElement.dataset.id);}
       // <
+      viewElement.addEventListener('ipc-message',function(event) {
+        if(event.channel=="theme-install") {
+          bws.createThemeInstallPopup(event.args[0].themeData,tabElement.dataset.id)
+        } else if(event.channel=="get-themes") {
+          viewElement.sendToFrame(event.frameId,"theme-list",bws.themeList)
+        } else if(event.channel=="get-color-scheme") {
+          viewElement.sendToFrame(event.frameId,"user-colors",{
+            primary: bws.getValidHex(localStorage.getItem("theme-primary"))||"#4e2493",
+            secondary: bws.getValidHex(localStorage.getItem("theme-secondary"))||"#ffe5fb",
+          })
+        } else if(event.channel=="set-scheme-primary") {
+          localStorage.setItem('theme-primary',event.args[0])
+        } else if(event.channel=="set-scheme-secondary") {
+          localStorage.setItem('theme-secondary',event.args[0])
+        }
+      })
+      viewElement.preload="border-public-preload.js"
       viewElement.src=this.#handleURI(tab.url)[0]
     var UU$=tab.url||"border://newtab"
     setInterval(function(){
-      if(UU$==viewElement.getURL()) { return }
-      UU$=viewElement.getURL()
-      tabElement.dataset.url=viewElement.getURL()
+      if(UU$==viewElement.src) { return }
+      UU$=viewElement.src
+      tabElement.dataset.url=viewElement.src
       if(tabElement.classList.contains('border-current')) {
-        document.querySelector("#border-searchbar").value=viewElement.getURL()
+        document.querySelector("#border-searchbar").value=viewElement.src
       }
     },20)
     var cmenu=this.populateMenu
@@ -1425,8 +1497,8 @@ Because of the iframe system some website won't work in this browser (like youtu
       this.#browserBody
           .querySelector("#border-search-button")
           .addEventListener("click", () => {
-              this.#browserBody.querySelector(".border-tab.border-current").dataset.url =
-                  this.#browserBody.querySelector("#border-searchbar").value;
+              this.#browserBody.querySelector(".border-view.border-current").src =
+              this.#handleURI(this.#browserBody.querySelector("#border-searchbar").value)[0];
           });
 
       this.addTab({ current: true });
@@ -1517,8 +1589,8 @@ Because of the iframe system some website won't work in this browser (like youtu
           .querySelector("#border-searchbar")
           .addEventListener("keyup", (event) => {
               if (event.key === "Enter") {
-                  this.#browserBody.querySelector(".border-tab.border-current").dataset.url =
-                      this.#browserBody.querySelector("#border-searchbar").value;
+                  this.#browserBody.querySelector(".border-view.border-current").src =
+                      this.#handleURI(this.#browserBody.querySelector("#border-searchbar").value)[0];
               }
           });
     document.querySelector(".border-bookmark-bar").addEventListener('contextmenu',function(e){
@@ -1582,6 +1654,61 @@ Because of the iframe system some website won't work in this browser (like youtu
       },10)
       
   }
+  escapeHtm(text) {
+    var E=document.createElement('p')
+    E.innerText=text
+    return E.innerHTML
+  }
+   createThemeInstallPopup(theme,tab) {
+    var template=`<div class="border-alert-dialog">
+    <p class="border-popup-title">Install {ThemeName}?</p>
+    <p>Made by <i>{ThemeAuthor}</i><br>Built for Border {ThemeVersion}</p>
+    <p><i>{ThemeDetails}</i></p>
+    <div class="border-alert-buttons">
+      <button class="border-alert-action">Cancel</button> <button class="border-ok-action">Install</button>
+    </div>
+  </div>`
+  var self=this
+  var TEMP=document.createElement('template4dk')
+  TEMP.innerHTML=template.replaceAll("{ThemeName}",this.escapeHtm(theme.name)).replaceAll("{ThemeDetails}",this.escapeHtm(theme.description)).replaceAll("{ThemeVersion}",theme.version).replaceAll("{ThemeAuthor}",this.escapeHtm(theme.author))
+  var popup=TEMP.querySelector('.border-alert-dialog')
+  document.querySelector('.border-theme-installers').appendChild(popup)
+  popup.querySelector('.border-ok-action').onclick=function(){
+    clearInterval(mtci)
+    fetch((new URL(theme.contentURL,'https://onofficiel.github.io/border/')).href).then(async (css)=>{
+    popup.parentNode.removeChild(popup)
+    var themes= self.themeList.concat([
+      {
+        css: await css.text(),
+        name:theme.name,
+        thumbnail:theme.imageURL,
+        description:theme.description,
+        version: theme.version,
+        author:theme.author
+      }
+    ])
+    localStorage.setItem('themes',JSON.stringify(themes))
+  }).catch((e)=>alert("Failed to install theme:"+e))
+  }
+  popup.querySelector('.border-alert-action').onclick=function(){
+    clearInterval(mtci)
+    popup.parentNode.removeChild(popup)
+  }
+    var mtci=setInterval(()=>{
+     var nbkm=popup
+     if(nbkm) {
+       nbkm.style.left=((window.innerWidth-300)/2)+"px"
+     }
+     try{
+     if(tab!=(document.querySelector('.border-tab.border-current')||{dataset:{}}).dataset.id) {
+       popup.style.display="none"
+     } else {
+       popup.style.display=""
+     }
+    }catch(e){null}
+   },10)
+ }
 }
 let browser = new Border();
 window.addEventListener('blur',()=>browser.hideMenu())
+
