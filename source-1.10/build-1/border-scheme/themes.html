@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Themes</title>
     <link rel="stylesheet" href="border://styles/lexend.css" />
     <style>
       html,body{margin:0}
       .themes-header {
         background-color: blueviolet;
-        color:white;
+        color:var(--border-primary);
         width:100%;
-        font-size: 22px;
+        padding: 5px;
+        font-size: 28px;
         font-family:Lexend;
-        background-color: var(--border-primary);
+        background-color: var(--border-secondary);
       }
       .themes-body{
         width:100%;
@@ -33,18 +35,126 @@
       .section p,.section-sub-label{
         font-size:14px;
       }
+      .theme-holder {
+          width:100%;
+          display:flex;
+          flex-direction:column;
+          margin-top:7px;
+          justify-content: center;
+          align-items: center;
+      }
+      html{background:var(--border-secondary)}
+      .theme-item {
+          width:90%;
+          background-color: #ccc7;
+          border-radius: 20px;
+          padding: 9px;
+          margin-top: 5px;
+          margin-bottom: 5px;
+      }
+      .get-more {
+          float:right;
+          opacity: 0.5;
+          transition: 300ms;
+          margin-right: 5%;
+          font-size: 18px;
+          cursor: pointer;
+      }
+      .get-more:hover {
+          opacity: 1;
+      }
+      .theme-name {
+          font-size: 25px;
+          margin:4px;
+      }
+      .theme-author,.theme-details {
+          margin:4px;
+      }
+      .theme-details{margin-top:13px;}
+      .theme-button {
+          width: 97%;
+          text-align: center;
+          background-color: var(--border-primary);
+          color:var(--border-secondary);
+          font-size: 16px;
+          margin-top: 4px;
+          border-radius: 20px;
+          padding: 8px;
+          margin-bottom: 4px;
+          cursor: pointer;
+      }
+      html,body{overflow-x:hidden}
+      .theme-button[disabled] {
+          cursor:not-allowed;
+          opacity: 0.7;
+      }
+      .theme-options {
+        width:100%;
+          display:flex;
+          flex-direction:column;
+          margin-top:7px;
+          justify-content: center;
+          align-items: center;
+      }
+      .themes-header .label{margin-left:5%;width:fit-content !important;display:inline-block}
     </style>
   </head>
   <body>
     <div class="themes-app">
-      <div class="themes-header">Themes</div>
-      <div class="themes-body"></div>
+      <div class="themes-header"><div class="label">Themes</div> <span class="get-more" onclick="border.tabs.mk('https://onofficiel.github.io/border/themes');">Get Themes</span></div>
+      <div class="themes-body">
+          <div class="theme-bruh">
+              <div class="theme-item">
+                  <p class="theme-name">My theme</p>
+                  <p class="theme-author">By <i>Somebody</i></p>
+                  <p class="theme-details">Some more info about my theme!</p>
+                  <div class="theme-options">
+                      <div class="theme-button">Use this theme</div>
+                      <div class="theme-button">Remove theme</div>
+                  </div>
+              </div>
+          </div>
+      </div>
     </div>
     <script>
+        let bropen=(u)=>open(u)
       setInterval(()=>{
         document.querySelector(':root').style.setProperty('--border-primary',border.themes.primary())
         document.querySelector(':root').style.setProperty('--border-secondary',border.themes.secondary())
       })
+      function htmesc(t){var e=document.createElement('p');e.innerText=t;return e.innerHTML}
+      var lastId=-1
+      var lastLength=0
+      async function showThemes() {
+          var box=document.querySelector('.theme-bruh')
+          if(!window.border) {return}
+          var id=await border.themes.getCurrent()
+          var themes=await border.themes.list()
+          if(themes.length!=lastLength||lastId!=id) {
+              lastLength=themes.length
+              lastId=id
+          var container=document.createElement("div")
+          container.className="theme-holder"
+          for(var i=0;i<themes.length;i++) {
+              var theme=themes[i]
+              var template=document.createElement('div')
+              template.innerHTML=`<div class="theme-item">
+                <div class="theme-name">${htmesc(theme.name)}</div>
+                <div class="theme-author">${htmesc(theme.author)}</div>
+                <div class="theme-details">${htmesc(theme.description)}</div>
+                <div class="theme-options">
+                    <div class="theme-button" ${id==i?`disabled>Current theme`:` onclick='border.themes.setCurrent(${i})'>Use this theme`}</div>
+                    <div class="theme-button" ${theme.system?`disabled>`:` onclick='border.themes.uninstall(${i})'>`}Remove theme</div>
+                </div>
+              </div>`
+              container.appendChild(template.querySelector('.theme-item'))
+          }
+          box.innerHTML=""
+          box.appendChild(container)
+        }
+          setTimeout(()=>showThemes(),10)
+      }
+      setTimeout(()=>showThemes(),300)
     </script>
   </body>
 </html>
