@@ -39,6 +39,7 @@ addEventListener('load',()=>{
       )
     })
   }
+
   if(location.protocol=='border:') {
     var themes=[]
     var ColorOne="#4e2493"
@@ -66,15 +67,47 @@ addEventListener('load',()=>{
           }
           return ColorTwo
         },
+        getCurrent:()=>{
+          return new Promise((yes,no)=>{
+            ipcRenderer.sendToHost('get-theme-id')
+            ipcRenderer.once('themeid',(event,id)=>yes(id==="border.default"?0:Number(id)+1))
+          })
+        },
+        setCurrent:(id)=>{
+          if(id==0) {
+            ipcRenderer.sendToHost('set-theme-id','border.default')
+          } else {
+            ipcRenderer.sendToHost('set-theme-id',id-1)
+          }
+        },
+        uninstall:(id)=>{
+          if(id==0) {
+            ipcRenderer.sendToHost('rm-theme','border.default')
+          } else {
+            ipcRenderer.sendToHost('rm-theme',id-1)
+          }
+        },
         list:()=>{
           return new Promise((yes,no)=>{
             ipcRenderer.sendToHost('get-themes')
             ipcRenderer.once('theme-list',(evt,...args)=>{
               themes=args[0]
+              themes.unshift(
+                {
+                  name:'Border Default',
+                  system:true,
+                  version: 1.10,
+                  author: 'Border',
+                  description: 'The default theme for border.'
+                }
+              )
               yes(themes)
             })
           })
         }
+      },
+      tabs:{
+        mk:(url)=>ipcRenderer.sendToHost('mktab',url)
       }
     })
   }

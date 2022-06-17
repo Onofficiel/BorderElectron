@@ -84,7 +84,7 @@ startFAR() {
   var onfind=function(e){
     console.log(e)
     ui.found=e.result.matches
-    ui.result=wasback?e.result.activeMatchOrdinal-1:e.result.activeMatchOrdinal+1
+    ui.result=e.result.activeMatchOrdinal
   }
   webview.addEventListener('found-in-page',onfind)
   ui.onexit=function() {
@@ -92,7 +92,6 @@ startFAR() {
     webview.removeEventListener('found-in-page',onfind)
   }
   var val=""
-  var wasback=false
   ui.ontext=function(text) {
     val=text
     webview.findInPage(text,{
@@ -103,14 +102,12 @@ startFAR() {
     }
   }
   ui.onnext=function () {
-    wasback=false
     webview.findInPage(val,{
       findNext:false,
       forward:true
     })
   }
   ui.onprev=function () {
-    wasback=true
     webview.findInPage(val,{
       findNext:false,
       forward:false
@@ -1121,6 +1118,7 @@ Because of the iframe system some website won't work in this browser (like youtu
         }
         tabElement.querySelector('.border-title').innerText=title
       },10)
+      viewElement.allowpopups=true
       viewElement.classList.add("border-view");
       viewElement.dataset.id = tabElement.dataset.id;
 
@@ -1130,6 +1128,10 @@ Because of the iframe system some website won't work in this browser (like youtu
       // After Created Action
       if (tab.current) {this.setCurrent(tabElement.dataset.id);}
       // <
+      setTimeout(()=>{ipcRenderer.send(
+        'attach-on-open',
+        viewElement.getWebContentsId()
+      )},100)
       viewElement.addEventListener('ipc-message',function(event) {
         if(event.channel=="theme-install") {
           bws.createThemeInstallPopup(event.args[0].themeData,tabElement.dataset.id)
@@ -1144,6 +1146,29 @@ Because of the iframe system some website won't work in this browser (like youtu
           localStorage.setItem('theme-primary',event.args[0])
         } else if(event.channel=="set-scheme-secondary") {
           localStorage.setItem('theme-secondary',event.args[0])
+        } else if(event.channel=="set-theme-id") {
+          localStorage.setItem('themeid',event.args[0])
+        } else if(event.channel=="get-theme-id") {
+          viewElement.sendToFrame(
+            event.frameId,
+            "themeid",
+            localStorage.getItem("themeid")||"border.default"
+          )
+        } else if(event.channel=="rm-theme") {
+          var id=event.args[0]
+          var themes=bws.themeList.concat([])
+          var rmd=[]
+          for(var i=0;i<themes.length;i++) {
+            if(i!=id) {
+              rmd.push(themes[i])
+            }
+          }
+          localStorage.setItem('themes',JSON.stringify(rmd))
+          if(localStorage.getItem("themeid")==id) {
+            localStorage.setItem("themeid",'border.default')
+          }
+        } else if(event.channel=="mktab") {
+          bws.addTab({current:true,url:event.args[0]})
         }
       })
       viewElement.preload="border-public-preload.js"
@@ -1236,11 +1261,11 @@ Because of the iframe system some website won't work in this browser (like youtu
   }
   /** Fullscreens the current Border window. */
   maxWindow() {
-    ipcRenderer.emit("winmaximize")
+    ipcRenderer.send("winmaximize")
   }
   /** Hides the current Border window. */
   minWindow() {
-    ipcRenderer.emit("winminimize")
+    ipcRenderer.send("winminimize")
   }
  /**
  * Creates a new Border window.
@@ -1345,6 +1370,7 @@ Because of the iframe system some website won't work in this browser (like youtu
       /** Gets or sets the index of the result. **/
       set result(f) {
         currentResult=f
+        findel.querySelector('.border-found-count').innerText=currentResult+"/"+foundCount
       },
       /** Returns true if terminated. */
       get terminated() {
@@ -1712,3 +1738,4 @@ Because of the iframe system some website won't work in this browser (like youtu
 let browser = new Border();
 window.addEventListener('blur',()=>browser.hideMenu())
 
+window.addEventListener('focus',()=>ipcRenderer.send("window-focus-public"))

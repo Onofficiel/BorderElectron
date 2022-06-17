@@ -68,6 +68,7 @@ function createWindow () {
     frame:false,
     icon:'border.png'
   });
+  lastOW=mainWindow.webContents.id
   mainWindow.setMinimumSize(400,130)
   mainWindow.on('page-title-updated',function(e,t){
     mainWindow.setTitle(t)
@@ -83,6 +84,33 @@ function createWindow () {
    //mainWindow.webContents.openDevTools()
 }
 
+var lastOW=-1
+
+ipcMain.on('attach-on-open',(event,id)=>{
+  console.log(id)
+  var wbc=webContents.fromId(id)
+  wbc.setWindowOpenHandler((details)=>{
+    console.log(details)
+    var url=new URL(details.url)
+    if(url.protocol=="border:"||url.protocol=="file:"||url.protocol=="plugin:") {
+      if(
+        (new URL(wbc.getURL()).protocol!="border:")&&
+        (new URL(wbc.getURL()).protocol!="file:")&&
+        (new URL(wbc.getURL()).protocol!="plugin:")
+      ) {
+        return {action:'deny'}
+      }
+    }
+    event.sender.executeJavaScript(
+      'browser.addTab({url:'+JSON.stringify(details.url)+',current:true});window.focus()'
+    )
+    return {action:'deny'}
+  })
+})
+
+ipcMain.on('window-focus-public',(event) =>{
+  lastOW=event.sender.id
+})
 
 var BorderPublicScheme = {
   'newtab': 'newtab.html',
