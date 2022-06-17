@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="border://styles/lexend.css" />
+    <style>
+      html,body{margin:0}
+      .themes-header {
+        background-color: blueviolet;
+        color:white;
+        width:100%;
+        font-size: 22px;
+        font-family:Lexend;
+        background-color: var(--border-primary);
+      }
+      .themes-body{
+        width:100%;
+        height:100%;
+      }
+      .themes-app{width:100%;height:100vh;display:flex;flex-direction: column;font-family: Lexend;}
+      .section-label{font-size:18px}
+      .border-color-picker {
+        border:none;
+        background-color:var(--border-primary);
+        opacity:0.7;
+        transition: 300ms;
+        border-radius: 7px;
+        height: 21px;
+        width: 31px;
+      }
+      .border-color-picker:hover {
+        opacity:1;
+      }
+      .section p,.section-sub-label{
+        font-size:14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="themes-app">
+      <div class="themes-header">Themes</div>
+      <div class="themes-body"></div>
+    </div>
+    <script>
+      setInterval(()=>{
+        document.querySelector(':root').style.setProperty('--border-primary',border.themes.primary())
+        document.querySelector(':root').style.setProperty('--border-secondary',border.themes.secondary())
+      })
+    </script>
+  </body>
+</html>

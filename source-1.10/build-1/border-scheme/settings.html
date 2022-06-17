@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Settings</title>
+    <link rel="stylesheet" href="border://styles/lexend.css" />
+    <style>
+      html,body{margin:0}
+      .settings-header {
+        background-color: blueviolet;
+        color:white;
+        width:100%;
+        font-size: 22px;
+        font-family:Lexend;
+      }
+      .settings-body{
+        width:100%;
+        height:100%;
+        background-color: var(--border-secondary);
+        color:var(--border-primary);
+      }
+      .settings-app{width:100%;height:100vh;display:flex;flex-direction: column;font-family: Lexend;}
+      .section-label{font-size:18px}
+      .border-color-picker {
+        border:none;
+        background-color:var(--border-primary);
+        opacity:0.7;
+        transition: 300ms;
+        border-radius: 7px;
+        height: 21px;
+        width: 31px;
+      }
+      .border-color-picker:hover {
+        opacity:1;
+      }
+      .section p,.section-sub-label{
+        font-size:14px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="settings-app">
+      <div class="settings-header">
+        Settings
+      </div>
+      <div class="settings-body">
+        <div class="settings-main">
+          <div class="section">
+            <div class="section-label">Color Scheme</div>
+            <div class="section-sub-label">Personalize Border with colors of your choice!</div>
+            <p>Primary Color <input type="color" onchange="border.themes.primary(this.value)" class="border-color-picker scheme-primary-pick" /> <span class="scheme-primary-value"></span></p>
+            <p>Secondary Color <input type="color" onchange="border.themes.secondary(this.value)" class="border-color-picker scheme-secondary-pick" /> <span class="scheme-secondary-value"></span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>setInterval(()=>{document.querySelector('.settings-header').style.backgroundColor=border.themes.primary()})</script>
+  <script>
+    setInterval(()=>{
+      document.querySelector(':root').style.setProperty('--border-primary',border.themes.primary())
+      document.querySelector(':root').style.setProperty('--border-secondary',border.themes.secondary())
+    })
+  </script>
+  <script>
+    setInterval(()=>document.querySelector('.scheme-primary-value').innerText=border.themes.primary())
+    setInterval(()=>document.querySelector('.scheme-secondary-value').innerText=border.themes.secondary())
+    setTimeout(()=>{
+      document.querySelector('.scheme-primary-pick').value=border.themes.primary()
+      document.querySelector('.scheme-secondary-pick').value=border.themes.secondary()
+    },30)
+  </script>
+</html>
