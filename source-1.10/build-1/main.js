@@ -2,14 +2,17 @@
 const {app,dialog, BrowserWindow,Tray,Menu,Notification,ipcMain,MenuItem,session,webContents} = require('electron')
 const path = require('path')
 var vm=require('node:vm');
-const { electron } = require('electron');
-
+const electron=require('electron')
 const fs=require('fs')
 
+const os = require("os");
+
+// invoke userInfo() method
+const userInfo = os.userInfo();
 
 var LocalStorage = require('node-localstorage').LocalStorage;
 
-var globalStorage=new LocalStorage("./GlobalStorage");
+var globalStorage=new LocalStorage(os.homedir+"\\AppData\\BORDER_BROWSER\\GlobalStorage");
 
 
 
@@ -17,7 +20,7 @@ var globalStorage=new LocalStorage("./GlobalStorage");
 
 
 
-
+console.log(electron)
 
 
 
@@ -68,7 +71,6 @@ function createWindow () {
     frame:false,
     icon:'border.png'
   });
-  lastOW=mainWindow.webContents.id
   mainWindow.setMinimumSize(400,130)
   mainWindow.on('page-title-updated',function(e,t){
     mainWindow.setTitle(t)
@@ -84,33 +86,6 @@ function createWindow () {
    //mainWindow.webContents.openDevTools()
 }
 
-var lastOW=-1
-
-ipcMain.on('attach-on-open',(event,id)=>{
-  console.log(id)
-  var wbc=webContents.fromId(id)
-  wbc.setWindowOpenHandler((details)=>{
-    console.log(details)
-    var url=new URL(details.url)
-    if(url.protocol=="border:"||url.protocol=="file:"||url.protocol=="plugin:") {
-      if(
-        (new URL(wbc.getURL()).protocol!="border:")&&
-        (new URL(wbc.getURL()).protocol!="file:")&&
-        (new URL(wbc.getURL()).protocol!="plugin:")
-      ) {
-        return {action:'deny'}
-      }
-    }
-    event.sender.executeJavaScript(
-      'browser.addTab({url:'+JSON.stringify(details.url)+',current:true});window.focus()'
-    )
-    return {action:'deny'}
-  })
-})
-
-ipcMain.on('window-focus-public',(event) =>{
-  lastOW=event.sender.id
-})
 
 var BorderPublicScheme = {
   'newtab': 'newtab.html',
