@@ -161,4 +161,4 @@ color: white;
 
 #border-tab-menu,#border-menu,#border-tab-container{-webkit-app-region:drag !important;}
 
-#border-tab-menu #,.border-menu *{-webkit-app-region:no-drag}
+#border-tab-menu,.border-menu *{-webkit-app-region:no-drag}

@@ -6,7 +6,6 @@
     <style>
       html,body{margin:0}
       .themes-header {
-        background-color: blueviolet;
         color:var(--border-primary);
         width:100%;
         padding: 5px;
@@ -127,7 +126,7 @@
       var lastLength=0
       async function showThemes() {
           var box=document.querySelector('.theme-bruh')
-          if(!window.border) {return}
+          if(!window.border) {setTimeout(()=>showThemes(),10)}
           var id=await border.themes.getCurrent()
           var themes=await border.themes.list()
           if(themes.length!=lastLength||lastId!=id) {

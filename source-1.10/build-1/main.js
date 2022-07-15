@@ -12,7 +12,20 @@ const userInfo = os.userInfo();
 
 var LocalStorage = require('node-localstorage').LocalStorage;
 
-var globalStorage=new LocalStorage(os.homedir+"\\AppData\\BORDER_BROWSER\\GlobalStorage");
+
+
+var globalStorage=new LocalStorage(
+  (function(){
+    switch(os.platform()) {
+      case 'win32':
+        return os.homedir()+"\\AppData\\BORDER_BROWSER\\GlobalStorage"
+      case 'darwin':
+        return path.normalize(os.homedir()+"/Library/Prefrences/BORDER_BROWSER/GlobalStorage")
+      default:
+        return path.normalize(os.homedir()+"/.BORDER_BROWSER/GlobalStorage")
+    }
+  })()
+);
 
 
 
@@ -20,7 +33,6 @@ var globalStorage=new LocalStorage(os.homedir+"\\AppData\\BORDER_BROWSER\\Global
 
 
 
-console.log(electron)
 
 
 
@@ -71,6 +83,7 @@ function createWindow () {
     frame:false,
     icon:'border.png'
   });
+  lastOW=mainWindow.webContents.id
   mainWindow.setMinimumSize(400,130)
   mainWindow.on('page-title-updated',function(e,t){
     mainWindow.setTitle(t)
@@ -86,6 +99,33 @@ function createWindow () {
    //mainWindow.webContents.openDevTools()
 }
 
+var lastOW=-1
+
+ipcMain.on('attach-on-open',(event,id)=>{
+  var wbc=webContents.fromId(id)
+  wbc.setWindowOpenHandler((details)=>{
+    var url=new URL(details.url)
+    if(url.protocol=="border:"||url.protocol=="file:"||url.protocol=="plugin:") {
+      if(
+        (new URL(wbc.getURL()).protocol!="border:")&&
+        (new URL(wbc.getURL()).protocol!="file:")&&
+        (new URL(wbc.getURL()).protocol!="plugin:")
+      ) {
+        return {action:'deny'}
+      }
+    }
+    event.sender.executeJavaScript(
+      'browser.addTab({url:'+JSON.stringify(details.url)+',current:true});window.focus()'
+    )
+    return {action:'deny'}
+  })
+})
+
+ipcMain.on('window-focus-public',(event) =>{
+  lastOW=event.sender.id
+})
+
+
 
 var BorderPublicScheme = {
   'newtab': 'newtab.html',
@@ -99,6 +139,7 @@ var BorderPublicScheme = {
   'about':'about.html',
   'urls':'urls.html',
   'themes':'themes.html',
+  'settings/content':'content-settings.html'
 }
 
 // This method will be called when Electron has finished
@@ -106,6 +147,54 @@ var BorderPublicScheme = {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   var public=session.fromPartition("persist:BorderProfile-Profile1")
+  session.fromPartition("persist:MainBorderPartition").setUserAgent((function(){
+    switch (os.platform()) {
+      case 'darwin':
+        return 'MacOS/X'
+      case 'freebsd':
+        return 'FreeBSD/1'
+      case 'win32':
+        var revision=os.release().split(".")[0]
+        var subrev=os.release().split(".")[1]
+        if(revision=="10") {
+          return 'Windows/10'
+        } else if(revision=="8") {
+          if(subrev=="1") {
+            return 'Windows/8.1'
+          } else {
+            return 'Windows/8'
+          }
+        } else if(revision=="7") {
+          return 'Windows/7'
+        } else if(revision=="6") {
+          return 'Windows/Vista'
+        }
+      case 'linux':
+        if(os.version().includes("Ubuntu")) {
+          return 'Ubuntu/x64'
+        }
+        if(os.version().includes("Raspbian")||os.version().includes("Raspberry Pi OS")) {
+          return 'RaspberryPi/x86'
+        }
+        if(os.version().includes("Chromium OS")) {
+          return 'Chromium/x64'
+        }
+        if(os.version().includes("Gentoo")) {
+          return 'Gentoo/x64'
+        }
+        if(os.version().includes("Tizen")) {
+          return 'Tizen/x86'
+        }
+        if(os.version().includes('Manjaro')) {
+          return 'ManjaroKDE/x64'
+        }
+        if(os.version().includes("Debian")) {
+          return 'Debian/x64'
+        }
+      default:
+        return 'Linux/x86'
+    }
+  })())
   public.protocol.registerFileProtocol('border', (request, callback) => {
     const url = new URL("https://border/"+request.url.slice(9))
     var page=url.pathname.slice(1)
@@ -116,6 +205,85 @@ app.whenReady().then(() => {
     }
     callback({ path: path.normalize(`${__dirname}/404.html`) })
   });
+  public.setPermissionRequestHandler(function(contents,permission,callback,details) {
+    contents.executeJavaScriptInIsolatedWorld(
+      999,
+      [
+        {
+          code: `requestPermission(
+            {
+              origin: location.origin || "about:blank",
+              path: location.href,
+              webContentsID: ${contents.id},
+              permission: ${JSON.stringify(
+                (function(){
+                  switch(permission) {
+                    case "media":
+                      if(details.mediaTypes.includes("audio")) {
+                        if(details.mediaTypes.includes("video")) {
+                          return 'cammic'
+                        }
+                        return 'microphone'
+                      }
+                      return 'camera'
+                    case 'midiSysex':
+                      return 'midi'
+                    default:
+                      return permission
+                  }
+                })()
+              )},
+              camera: ${details.mediaTypes?details.mediaTypes.includes("video"):false},
+              microphone: ${details.mediaTypes?details.mediaTypes.includes("audio"):false},
+              text: ${
+                JSON.stringify(
+                  (function() {
+                    switch (permission) {
+                      case "mediaKeySystem":
+                        return "play DRM-encrypted media?"
+                      case "clipboard-read":
+                        return "read your clipboard?"
+                      case "notifications":
+                        return "send you notifications?"
+                      case "geolocation":
+                        return "access your location?"
+                      case 'midiSysex':
+                        return 'have full control over your MIDI devices?'
+                      case 'midi':
+                        return "access your MIDI devices?"
+                      case "media":
+                        if(details.mediaTypes.includes("audio")) {
+                          if(details.mediaTypes.includes("video")) {
+                            return "access your camera and microphone?"
+                          } else {
+                            return "access your microphone?"
+                          }
+                        } else {
+                          return "access your camera?"
+                        }
+                      case "pointerLock":
+                        return "lock your mouse pointer?"
+                      case "fullscreen":
+                        return "display in fullscreen?"
+                      default:
+                        return `access your ${permission}?`
+                    }
+                  })()
+                )
+              }
+            }
+          )`
+        }
+      ]
+    ).then((value)=>{
+      callback(value?true:false);
+    }).catch((error)=>{
+      callback(false)
+    })
+  })
+  /*public.setPermissionCheckHandler(function(){
+    return false
+  })*/
   createWindow()
   // testing plugin
   setTimeout(function(){

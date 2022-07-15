@@ -1,3 +1,4 @@
+
 addEventListener('load',()=>{
   var {ipcRenderer,contextBridge}=require('electron')
   async function handleThemeDownloads(f) {
@@ -19,6 +20,35 @@ addEventListener('load',()=>{
     })(thmel[i],themes[i]))
   }
 }
+window.requestPermission=function(details) {
+  var RQID=Math.floor(Math.random()*9999)
+  return new Promise(function (resolve,reject) {
+    ipcRenderer.sendToHost("permission-request",{
+      webContentsID: details.id,
+      origin: details.origin,
+      path: details.path,
+      permission: details.permission,
+      requestID: RQID,
+      text:details.text
+    })
+    var IPCH=function(event,data){
+      if(
+        (data.permission===details.permission)
+        &&
+        (data.requestID == RQID)
+      ) {
+        ipcRenderer.off(
+          "permission-response",
+          IPCH
+        )
+        resolve(
+          data.allowed ? true : false
+        )
+      }
+    }
+    ipcRenderer.on('permission-response',IPCH)
+  })
+}
   if(location.href=="https://onofficiel.github.io/border/themes"||location.href=="https://onofficiel.github.io/border/themes/") {
     handleThemeDownloads((theme)=>{
       ipcRenderer.sendToHost(
@@ -39,6 +69,7 @@ addEventListener('load',()=>{
       )
     })
   }
+
 
   if(location.protocol=='border:') {
     var themes=[]
@@ -106,8 +137,75 @@ addEventListener('load',()=>{
           })
         }
       },
+      runtime: {
+        getPlatform: function() {
+          return new Promise(resolve => {
+            var RQID=Math.floor(Math.random()*9999)
+            ipcRenderer.sendToHost('get-os-revision',{requestID:RQID})
+            ipcRenderer.once(`OSREVISION@${RQID}`,function(event,agent){
+              resolve(agent)
+            })
+          })
+        }
+      },
       tabs:{
         mk:(url)=>ipcRenderer.sendToHost('mktab',url)
+      },
+      contentSettings: {
+        set: function (origin,permission,value) {
+          ipcRenderer.sendToHost('set-cs',{
+            permission:permission,
+            origin:origin,
+            value:value
+          })
+        },
+        get: function (origin,permission) {
+          var RQID=Math.floor(Math.random()*9999)
+          return new Promise(function (resolve,reject) {
+            ipcRenderer.sendToHost("get-cs",{
+              requestID:RQID,
+              origin,permission
+            })
+            var IPCH=function(event,data){
+              if(
+                (data.permission===permission)
+                &&
+                (data.requestID == RQID)
+              ) {
+                ipcRenderer.off(
+                  "respond-cs",
+                  IPCH
+                )
+                resolve(
+                  data.value
+                )
+              }
+            }
+            ipcRenderer.on('respond-cs',IPCH)
+          })
+        },
+        origins: function () {
+          var RQID=Math.floor(Math.random()*9999)
+          return new Promise(function (resolve,reject) {
+            ipcRenderer.sendToHost("gore-cs",{
+              requestID:RQID,
+            })
+            var IPCH=function(event,data){
+              if(
+                (data.requestID == RQID)
+              ) {
+                ipcRenderer.off(
+                  "origins-cs",
+                  IPCH
+                )
+                resolve(
+                  data.origins
+                )
+              }
+            }
+            ipcRenderer.on('origins-cs',IPCH)
+          })
+        },
       }
     })
   }

@@ -3,6 +3,48 @@ var electron=require('electron');
 var {remote}=electron;
 
 
+let ContentSettings={
+  get:function(p,o) {
+    try{
+      var d=JSON.parse(localStorage.getItem("permissions"))||{}
+    } catch (error) {
+      d={} 
+    }
+    if(!d[o]) {
+      d[o]={}
+      localStorage.setItem("permissions",JSON.stringify(d))
+      return 'ask'
+    }
+    if(!d[o][p]) {
+      return 'ask'
+    }
+    return d[o][p]
+  },
+  origins:function(){
+    try{
+      var d=JSON.parse(localStorage.getItem("permissions"))||{}
+    } catch (error) {
+      d={} 
+    }
+    return Object.keys(d)
+  },
+  set:function(p,o,x) {
+    try{
+      var d=JSON.parse(localStorage.getItem("permissions"))||{}
+    } catch (error) {
+      d={}
+    }
+    if(!d[o]) {
+      d[o]={}
+    }
+    d[o][p]=x
+    localStorage.setItem(
+      'permissions',JSON.stringify(d)
+    )
+  }
+}
+
+
 class Border {
   isValidHexColor(entry) {
     if(!entry) { return false }
@@ -1118,9 +1160,185 @@ Because of the iframe system some website won't work in this browser (like youtu
         }
         tabElement.querySelector('.border-title').innerText=title
       },10)
+      var self=this
       viewElement.allowpopups=true
       viewElement.classList.add("border-view");
       viewElement.dataset.id = tabElement.dataset.id;
+      viewElement.addEventListener('ipc-message',function(event) {
+        var details=event.args[0]
+        if(event.channel=="get-cs") {
+          viewElement.sendToFrame(
+            event.frameId,
+            "respond-cs",
+            {
+              requestID:details.requestID,
+              value: ContentSettings.get(
+                details.permission,
+                details.origin
+              ),
+              permission:details.permission
+            }
+          )
+        } else if(event.channel=="set-cs") {
+          ContentSettings.set(
+            details.permission,
+            details.origin,
+            details.value
+          )
+        } else if(event.channel=="gore-cs") {
+          viewElement.sendToFrame(
+            event.frameId,
+            "origins-cs",
+            {
+              requestID: details.requestID,
+              origins: ContentSettings.origins()
+            }
+          )
+        }
+      })
+      viewElement.addEventListener('ipc-message', event => {
+        if(event.channel=="get-os-revision") {
+          viewElement.sendToFrame(
+            event.frameId,
+            'OSREVISION@'+event.args[0].requestID,
+            navigator.userAgent
+          )
+        }
+      })
+      viewElement.addEventListener("ipc-message",function(event) {
+        if(event.channel=="permission-request") {
+          var details=event.args[0]
+          if(details.permission=="cammic") {
+            if(ContentSettings.get('camera',details.origin)=="deny"||ContentSettings.get('microphone',details.origin)=="deny") {
+              return viewElement.sendToFrame(
+                event.frameId,
+                "permission-response",{
+                  requestID:details.requestID,
+                  permission:details.permission,
+                  allowed: false
+                }
+              )
+            }
+            if(ContentSettings.get('camera',details.origin)=="allow"&&ContentSettings.get('microphone',details.origin)=="allow") {
+              return viewElement.sendToFrame(
+                event.frameId,
+                "permission-response",{
+                  requestID:details.requestID,
+                  permission:details.permission,
+                  allowed: true
+                }
+              )
+            }
+            var askDialog=self.createAlert("Permission Request", {
+              body: `Allow ${details.origin} to ${details.text}`,
+              webview: viewElement,
+              buttons: [
+                {
+                  label: "Allow",
+                  onclick: function () {
+                    viewElement.sendToFrame(
+                      event.frameId,
+                      "permission-response",{
+                        requestID:details.requestID,
+                        permission:details.permission,
+                        allowed: true
+                      }
+                    )
+                    ContentSettings.set("camera",details.origin,"allow")
+                    ContentSettings.set("microphone",details.origin,"allow")
+                    askDialog.close()
+                  },
+                  default: true
+                },
+                {
+                  label: "Deny",
+                  onclick: function () {
+                    viewElement.sendToFrame(
+                      event.frameId,
+                      "permission-response",{
+                        requestID:details.requestID,
+                        permission:details.permission,
+                        allowed: false
+                      }
+                    )
+                    ContentSettings.set("camera",details.origin,"deny")
+                    ContentSettings.set("microphone",details.origin,"deny")
+                    askDialog.close()
+                  }
+                }
+              ]
+            })
+            return
+          }
+          if(details.permission=="fullscreen"||details.permission=="pointerLock") {
+            return viewElement.sendToFrame(
+              event.frameId,
+              "permission-response",{
+                requestID:details.requestID,
+                permission:details.permission,
+                allowed: true
+              }
+            )
+          }
+          if(ContentSettings.get(details.permission,details.origin)==="allow") {
+            return viewElement.sendToFrame(
+              event.frameId,
+              "permission-response",{
+                requestID:details.requestID,
+                permission:details.permission,
+                allowed: true
+              }
+            )
+          }
+          if(ContentSettings.get(details.permission,details.origin)==="deny") {
+            return viewElement.sendToFrame(
+              event.frameId,
+              "permission-response",{
+                requestID:details.requestID,
+                permission:details.permission,
+                allowed: false
+              }
+            )
+          }
+          var askDialog=self.createAlert("Permission Request", {
+            body: `Allow ${details.origin} to ${details.text}`,
+            webview: viewElement,
+            buttons: [
+              {
+                label: "Allow",
+                onclick: function () {
+                  viewElement.sendToFrame(
+                    event.frameId,
+                    "permission-response",{
+                      requestID:details.requestID,
+                      permission:details.permission,
+                      allowed: true
+                    }
+                  )
+                  ContentSettings.set(details.permission,details.origin,"allow")
+                  askDialog.close()
+                },
+                default: true
+              },
+              {
+                label: "Deny",
+                onclick: function () {
+                  viewElement.sendToFrame(
+                    event.frameId,
+                    "permission-response",{
+                      requestID:details.requestID,
+                      permission:details.permission,
+                      allowed: false
+                    }
+                  )
+                  ContentSettings.set(details.permission,details.origin,"deny")
+                  askDialog.close()
+                }
+              }
+            ]
+          })
+        }
+      })
 
       this.#browserBody.querySelector("#border-view-container").appendChild(viewElement);
       // <
@@ -1685,6 +1903,76 @@ Because of the iframe system some website won't work in this browser (like youtu
     E.innerText=text
     return E.innerHTML
   }
+  createAlert(title,{body,buttons,webview}) {
+    var template=`<div class="border-alert-dialog">
+    <p class="border-popup-title">${this.escapeHtm(title)}</p>
+    <p>${this.escapeHtm(body)}</i></p>
+    <div class="border-alert-buttons">
+    </div>
+  </div>`
+  var TEMP=document.createElement('template4dk')
+  TEMP.innerHTML=template
+  var popup=TEMP.querySelector('.border-alert-dialog')
+  buttons.forEach(function(button){
+    var element=document.createElement('button')
+    if(button.default) {
+      element.className="border-ok-action"
+    } else {
+      element.className="border-alert-action"
+    }
+    element.innerText=button.label
+    element.onclick=function() {
+      try {
+        button.onclick()
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    popup.querySelector('.border-alert-buttons').appendChild(element)
+  })
+  var closed=false
+  var mtwi=0
+  var cadi=setInterval(function(){
+    try {
+      var width=(popup.offsetWidth||300)
+      popup.style.left=((window.innerWidth-width)/2)+"px"
+    } catch (error) {
+      null
+    }
+  })
+  if(webview) {
+    mtwi=setInterval(function() {
+      try {
+        if(webview.classList.contains("border-current")) {
+          popup.style.display=""
+        } else {
+          popup.style.display="none"
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    })
+  }
+  var dialog={
+    close: function() {
+      if(closed) {return}
+      try {
+        popup.parentNode.removeChild(popup)
+        clearInterval(cadi)
+        clearInterval(mtwi)
+        closed=true
+      } catch (error) {
+        null
+      }
+    },
+    setTitle:function(title) {
+      if(closed) {return}
+      popup.querySelector('.border-popup-title').innerText=title
+    }
+  }
+  document.querySelector('.border-alert-container').appendChild(popup)
+  return dialog
+  }
    createThemeInstallPopup(theme,tab) {
     var template=`<div class="border-alert-dialog">
     <p class="border-popup-title">Install {ThemeName}?</p>
@@ -1698,7 +1986,7 @@ Because of the iframe system some website won't work in this browser (like youtu
   var TEMP=document.createElement('template4dk')
   TEMP.innerHTML=template.replaceAll("{ThemeName}",this.escapeHtm(theme.name)).replaceAll("{ThemeDetails}",this.escapeHtm(theme.description)).replaceAll("{ThemeVersion}",theme.version).replaceAll("{ThemeAuthor}",this.escapeHtm(theme.author))
   var popup=TEMP.querySelector('.border-alert-dialog')
-  document.querySelector('.border-theme-installers').appendChild(popup)
+  document.querySelector('.border-alert-container').appendChild(popup)
   popup.querySelector('.border-ok-action').onclick=function(){
     clearInterval(mtci)
     fetch((new URL(theme.contentURL,'https://onofficiel.github.io/border/')).href).then(async (css)=>{

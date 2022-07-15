@@ -5,14 +5,6 @@
     <link rel="stylesheet" href="border://styles/lexend.css" />
     <style>
       html,body{margin:0}
-      .settings-header {
-        color:var(--border-primary);
-        width:100%;
-        padding: 5px;
-        font-size: 28px;
-        font-family:Lexend;
-        background-color: var(--border-secondary);
-      }
       .settings-body{
         width:100%;
         height:100%;
@@ -20,44 +12,125 @@
         color:var(--border-primary);
       }
       .settings-app{width:100%;height:100vh;display:flex;flex-direction: column;font-family: Lexend;}
-      .section-label{font-size:18px;margin-left:6px;margin-top:4px;}
+      .section-label{font-size:18px}
       .border-color-picker {
         border:none;
-        background-color:var(--border-primary);
+        background-color:transparent;
         opacity:0.7;
         transition: 300ms;
-        border-radius: 7px;
-        height: 21px;
-        width: 31px;
+        border-radius: 13px;
+        height: 30px;
+        width: 40px;
+        outline: none;
+        padding: none;
+        vertical-align: middle;
       }
-      html{overflow-x:hidden}
       .border-color-picker:hover {
         opacity:1;
       }
-      .section p,.section-sub-label{
+      .section p:not(.section-sub-label){
         font-size:14px;
-        margin-left:6px;
       }
+
+      .section-sub-label {
+        font-size: 11px;
+      }
+
+      .tile {
+        color: var(--border-secondary);
+        background-color: var(--border-primary);
+        width: 93%;
+        border-radius: 12px;
+        padding: 10px;
+      }
+      .section {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .settings-header {
+        color:var(--border-primary);
+        font-size: 28px;
+        font-family:Lexend;
+        margin-bottom: 5px;
+      }
+      html {
+        background-color: var(--border-secondary);
+      }
+      .settings-header,.section-label {
+        width: 93%;
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+      .settings-header .label{width:fit-content !important;display:inline-block !important}
     </style>
   </head>
   <body>
     <div class="settings-app">
+      <div class="section">
       <div class="settings-header">
-        Settings
+        <div class='label'>Settings</div>
+      </div>
       </div>
       <div class="settings-body">
         <div class="settings-main">
-          <div class="section-label">Color Scheme</div>
-          <div class="section-sub-label">Personalize Border with colors of your choice!</div>
+          <div class="section"><div class="section-label">Personalization</div></div>
           <div class="section">
-            <p>Primary Color <input type="color" onchange="border.themes.primary(this.value)" class="border-color-picker scheme-primary-pick" /> <span class="scheme-primary-value"></span></p>
-            <p>Secondary Color <input type="color" onchange="border.themes.secondary(this.value)" class="border-color-picker scheme-secondary-pick" /> <span class="scheme-secondary-value"></span></p>
+            <div class="tile">
+              <p class="section-sub-label">Color Scheme</p>
+              <p>Primary Color <input type="color" onchange="border.themes.primary(this.value)" class="border-color-picker scheme-primary-pick" /> <span class="scheme-primary-value"></span></p>
+              <p>Secondary Color <input type="color" onchange="border.themes.secondary(this.value)" class="border-color-picker scheme-secondary-pick" /> <span class="scheme-secondary-value"></span></p>
+            </div>
+          </div>
+          <div class="section"><div class="section-label">Privacy</div></div>
+          <div class="section">
+            <div class="tile">
+              <p class="section-sub-label">Content Settings</p>
+              <div class="list-box privacy-contentsettings-xj42rof"></div>
+            </div>
+          </div>
+          <div class="section"><div class="section-label">About</div></div>
+          <div class="section">
+            <div class="tile">
+              <p><img style="display: inline-block; width: 150px;" src="data:image/png;base64,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"></p>
+              <p>Border 1.10 on <span class="osrevision"></span></p>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </body>
   <script>
+    setTimeout(async ()=>{
+      var revision=await border.runtime.getPlatform()
+      document.querySelector('.osrevision').innerText=(function(){switch(revision) {
+        case 'Windows/10':
+          return 'Windows 10 (64-bit)'
+        case 'Windows/8.1':
+          return 'Windows 8.1 (32-bit)'
+        case 'Windows/8':
+          return 'Windows 8 (32-bit)'
+        case 'Windows/7':
+          return 'Windows 7 (32-bit)'
+        case 'Windows/Vista':
+          return 'Windows Vista (32-bit)'
+        case 'Ubuntu/x64':
+          return 'Ubuntu (64-bit)'
+        case 'RaspberryPi/x86':
+          return 'Raspberry Pi OS (32-bit)'
+        case 'Chromium/x64':
+          return 'Chromium OS (64-bit)'
+        case 'Gentoo/x64':
+          return 'Gentoo Linux (64-bit)'
+        case 'Debian/x64':
+          return 'Debian Linux (64-bit)'
+        case 'MacOS/X':
+          return 'Mac OS X (64-bit)'
+        default:
+          return 'Linux'
+      }})()
+    },100)
     setInterval(()=>{
       document.querySelector(':root').style.setProperty('--border-primary',border.themes.primary())
       document.querySelector(':root').style.setProperty('--border-secondary',border.themes.secondary())
@@ -69,6 +142,31 @@
     setTimeout(()=>{
       document.querySelector('.scheme-primary-pick').value=border.themes.primary()
       document.querySelector('.scheme-secondary-pick').value=border.themes.secondary()
+    },30)
+    var CSLR
+    setInterval(function(){
+      var cslb=document.querySelector(".privacy-contentsettings-xj42rof.list-box")
+      if(!window.border){return}
+      //var ERrd94kO=document.createElement("div")
+      border.contentSettings.origins().then(function(result){
+        if(!CSLR) {
+          CSLR=JSON.stringify(result)
+        } else if(CSLR===JSON.stringify(result)) {
+          return
+        }
+        CSLR=JSON.stringify(result)
+        cslb.innerHTML=""
+        result.forEach(function (origin) {
+          var item=document.createElement("div")
+          item.className="item"
+          item.innerText=origin
+          item.style.cursor='pointer'
+          item.onclick=function(){
+            location.href=`border://settings/content?origin=${encodeURIComponent(origin)}`
+          }
+          cslb.appendChild(item)
+        });
+      })
     },30)
   </script>
 </html>
