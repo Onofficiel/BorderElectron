@@ -156,18 +156,30 @@ app.whenReady().then(() => {
       case 'win32':
         var revision=os.release().split(".")[0]
         var subrev=os.release().split(".")[1]
+        var buildnumber=os.release().split(".")[2]
         if(revision=="10") {
-          return 'Windows/10'
-        } else if(revision=="8") {
-          if(subrev=="1") {
-            return 'Windows/8.1'
-          } else {
-            return 'Windows/8'
+          if(Number(buildnumber)>=22000) {
+            return 'Windows/11'
           }
-        } else if(revision=="7") {
-          return 'Windows/7'
+          return 'Windows/10'
         } else if(revision=="6") {
-          return 'Windows/Vista'
+          if(subrev=="3") {
+            return 'Windows/8.1'
+          } else if(subrev=="2") {
+            return 'Windows/8'
+          } else if(subrev=="1") {
+            return 'Windows/7'
+          } else if(subrev=="0") {
+            return "Windows/Vista"
+          }
+        } else if(revision=="5") {
+          if(subrev=="0") {
+            return 'Windows/2000'
+          } else if(subrev=='3') {
+            return 'Windows/Server2003'
+          } else {
+            return 'Windows/XP'
+          }
         }
       case 'linux':
         if(os.version().includes("Ubuntu")) {
