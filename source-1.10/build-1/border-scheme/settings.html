@@ -105,6 +105,8 @@
     setTimeout(async ()=>{
       var revision=await border.runtime.getPlatform()
       document.querySelector('.osrevision').innerText=(function(){switch(revision) {
+        case 'Windows/11':
+          return 'Windows 11'
         case 'Windows/10':
           return 'Windows 10 (64-bit)'
         case 'Windows/8.1':
